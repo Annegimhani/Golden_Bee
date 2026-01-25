@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>Distributor Login</h2>
+  <form method="POST" class="form">
+    <label>Username</label>
+    <input type="text" name="username" placeholder="Enter username" required>
+
+    <label>Password</label>
+    <input type="password" name="password" placeholder="Enter password" required>
+
+    <button type="submit" class="btn">Login</button>
+
+    <p class="hint">
+      No account? <a href="{{ url_for('distributor_bp.distributor_register') }}">Register</a>
+    </p>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .flash-messages { margin: 10px 0; }
+        .flash-success { color: green; padding: 10px; background: #e8f5e8; }
+        .header { background: #f8f9fa; padding: 20px; margin-bottom: 20px; }
+        .nav a { margin-right: 15px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Admin Dashboard</h1>
+        <p>Welcome, {{ username }}!</p>
+        <div class="nav">
+            <a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('admin.admin_logout') }}">Logout</a>
+        </div>
+    </div>
+    
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    
+    <h2>Dashboard Content</h2>
+    <p>This is the admin dashboard. Add your content here.</p>
+</body>
+</html>

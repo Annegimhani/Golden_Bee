@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title if title else "Golden Bee - Admin" }}</title>
+  <link rel="stylesheet" href="{{ url_for('admin.static', filename='css/admin.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">GOLDEN_BEE</div>
+      <nav class="nav">
+        <a class="{% if active_page=='login' %}active{% endif %}" href="{{ url_for('admin.admin_login') }}">Login</a>
+        <a class="{% if active_page=='register' %}active{% endif %}" href="{{ url_for('admin.admin_register') }}">Register</a>
+        {% if session.get('user_id') %}
+          <a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a>
+          <a href="{{ url_for('admin.admin_logout') }}">Logout</a>
+        {% endif %}
+      </nav>
+    </header>
+
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="alerts">
+            {% for category, msg in messages %}
+              <div class="alert {{ category }}">{{ msg }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">© Golden Bee</footer>
+  </div>
+</body>
+</html>

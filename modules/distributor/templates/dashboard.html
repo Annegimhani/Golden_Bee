@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>Distributor Dashboard</h2>
+  <p>Welcome, <b>{{ username }}</b></p>
+
+  <div class="grid">
+    <a class="tile" href="#">View Orders</a>
+    <a class="tile" href="#">Manage Stock</a>
+    <a class="tile" href="#">Request Inventory</a>
+    <a class="tile" href="{{ url_for('distributor_bp.distributor_logout') }}">Logout</a>
+  </div>
+</div>
+{% endblock %}
