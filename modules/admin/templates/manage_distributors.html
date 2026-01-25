@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Manage Distributors</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Distributor Name</th>
+      <th>District</th>
+      <th>Province</th>
+      <th>Owner Name</th>
+      <th>Contact No</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for distributor in distributors %}
+      <tr>
+        <td>{{ distributor[1] }}</td>
+        <td>{{ distributor[2] }}</td>
+        <td>{{ distributor[3] }}</td>
+        <td>{{ distributor[4] }}</td>
+        <td>{{ distributor[5] }}</td>
+        <td>
+          <a href="{{ url_for('distributor_mgmt.update_distributor', distributor_id=distributor[0]) }}">Edit</a>
+          <a href="{{ url_for('distributor_mgmt.delete_distributor', distributor_id=distributor[0]) }}" onclick="return confirm('Are you sure you want to delete?')">Delete</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<a href="{{ url_for('distributor_mgmt.add_distributor') }}">Add New Distributor</a>
+{% endblock %}

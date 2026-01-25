@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Add New Distributor</h2>
+<form method="POST" enctype="multipart/form-data">
+  <label for="distributor_name">Distributor Name</label>
+  <input type="text" name="distributor_name" required>
+
+  <label for="district">District</label>
+  <input type="text" name="district">
+
+  <label for="province">Province</label>
+  <input type="text" name="province">
+
+  <label for="owner_name">Owner Name</label>
+  <input type="text" name="owner_name">
+
+  <label for="contact_no">Contact No</label>
+  <input type="text" name="contact_no">
+
+  <label for="address">Address</label>
+  <textarea name="address"></textarea>
+
+  <label for="email">Email</label>
+  <input type="email" name="email" required>
+
+  <label for="password">Password</label>
+  <input type="password" name="password" required>
+
+  <label for="distributor_image">Distributor Image</label>
+  <input type="file" name="distributor_image">
+
+  <button type="submit">Add Distributor</button>
+</form>
+{% endblock %}

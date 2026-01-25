@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Manage Categories</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Category Name</th>
+      <th>Description</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for category in categories %}
+      <tr>
+        <td>{{ category['category_name'] }}</td> <!-- Access category_name -->
+        <td>{{ category['description'] }}</td>  <!-- Access description -->
+        <td>
+          <a href="{{ url_for('category_mgmt.update_category', category_id=category['category_id']) }}">Edit</a> <!-- Access category_id -->
+          <a href="{{ url_for('category_mgmt.delete_category', category_id=category['category_id']) }}" onclick="return confirm('Are you sure you want to delete?')">Delete</a> <!-- Access category_id -->
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="{{ url_for('category_mgmt.add_category') }}" class="button">Add New Category</a>
+{% endblock %}

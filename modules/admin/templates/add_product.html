@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Product</title>
+</head>
+<body>
+
+<h2>Add New Product</h2>
+<form method="POST" enctype="multipart/form-data">
+    <label for="product_name">Product Name:</label>
+    <input type="text" name="product_name" id="product_name" required>
+
+    <label for="category_name">Category:</label>
+    <select name="category_name" id="category_name" required>
+        <option value="">Select a category</option>
+        {% for category in categories %}
+            <option value="{{ category[0] }}">{{ category[1] }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="unit_price">Unit Price:</label>
+    <input type="number" name="unit_price" id="unit_price" required>
+
+    <label for="variant_size">Variant Size:</label>
+    <input type="text" name="variant_size" id="variant_size" required>
+
+    <label for="shelf_life_days">Shelf Life (Days):</label>
+    <input type="number" name="shelf_life_days" id="shelf_life_days" required>
+
+    <label for="product_image">Product Image:</label>
+    <input type="file" name="product_image" id="product_image" accept="image/*">
+
+    <button type="submit">Add Product</button>
+</form>
+
+
+</body>
+</html>

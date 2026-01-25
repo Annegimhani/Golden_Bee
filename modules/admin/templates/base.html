@@ -5,16 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ title if title else "Golden Bee - Admin" }}</title>
   <link rel="stylesheet" href="{{ url_for('admin.static', filename='css/admin.css') }}">
+  <!-- Optionally include Bootstrap for responsive layout -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
   <div class="page">
     <header class="topbar">
-      <div class="brand">GOLDEN_BEE</div>
+      <div class="brand">Golden Bee</div>
       <nav class="nav">
+        <!-- Login/Registration Links -->
         <a class="{% if active_page=='login' %}active{% endif %}" href="{{ url_for('admin.admin_login') }}">Login</a>
         <a class="{% if active_page=='register' %}active{% endif %}" href="{{ url_for('admin.admin_register') }}">Register</a>
+        
         {% if session.get('user_id') %}
-          <a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a>
+
           <a href="{{ url_for('admin.admin_logout') }}">Logout</a>
         {% endif %}
       </nav>
@@ -25,16 +29,22 @@
         {% if messages %}
           <div class="alerts">
             {% for category, msg in messages %}
-              <div class="alert {{ category }}">{{ msg }}</div>
+              <div class="alert alert-{{ category }}">{{ msg }}</div>
             {% endfor %}
           </div>
         {% endif %}
       {% endwith %}
 
+      <!-- Main Content Block -->
       {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer">© Golden Bee</footer>
+    <footer class="footer text-center py-4">
+      <p>© Golden Bee 2026</p>
+    </footer>
   </div>
+
+  <!-- Optionally include Bootstrap JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

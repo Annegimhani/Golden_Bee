@@ -8,8 +8,29 @@
         body { font-family: Arial, sans-serif; margin: 20px; }
         .flash-messages { margin: 10px 0; }
         .flash-success { color: green; padding: 10px; background: #e8f5e8; }
+        .flash-error { color: red; padding: 10px; background: #ffebee; }
         .header { background: #f8f9fa; padding: 20px; margin-bottom: 20px; }
         .nav a { margin-right: 15px; }
+        .button { 
+            padding: 10px 20px; 
+            background-color: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            margin-top: 15px; 
+            display: inline-block;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .dashboard-actions {
+            margin-top: 30px;
+        }
+        .dashboard-actions .button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -34,5 +55,17 @@
     
     <h2>Dashboard Content</h2>
     <p>This is the admin dashboard. Add your content here.</p>
+
+    <div class="dashboard-actions">
+        <!-- Fixed URL for Manage Distributors -->
+        <a href="{{ url_for('distributor_mgmt.manage_distributors') }}" class="button">Manage Distributors</a>
+
+        <!-- Added Manage Categories link -->
+        <a href="{{ url_for('category_mgmt.manage_categories') }}" class="button">Manage Categories</a>
+
+        <!-- Added Manage Products link -->
+        <a href="{{ url_for('product_mgmt.manage_products') }}" class="button">Manage Products</a>
+    </div>
+
 </body>
 </html>

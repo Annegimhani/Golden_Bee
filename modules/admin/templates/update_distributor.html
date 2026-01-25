@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Update Distributor</h2>
+<form method="POST" enctype="multipart/form-data">
+  <label for="distributor_name">Distributor Name</label>
+  <input type="text" name="distributor_name" value="{{ distributor[1] }}" required>
+
+  <label for="district">District</label>
+  <input type="text" name="district" value="{{ distributor[2] }}">
+
+  <label for="province">Province</label>
+  <input type="text" name="province" value="{{ distributor[3] }}">
+
+  <label for="owner_name">Owner Name</label>
+  <input type="text" name="owner_name" value="{{ distributor[4] }}">
+
+  <label for="contact_no">Contact No</label>
+  <input type="text" name="contact_no" value="{{ distributor[5] }}">
+
+  <label for="address">Address</label>
+  <textarea name="address">{{ distributor[6] }}</textarea>
+
+  <label for="email">Email</label>
+  <input type="email" name="email" value="{{ distributor[7] }}" required>
+
+  <label for="password">Password</label>
+  <input type="password" name="password" value="{{ distributor[8] }}" required>
+
+  <label for="distributor_image">Distributor Image</label>
+  <input type="file" name="distributor_image">
+
+  <button type="submit">Update Distributor</button>
+</form>
+{% endblock %}

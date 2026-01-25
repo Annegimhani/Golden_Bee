@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Update Product</h2>
+
+<form action="{{ url_for('product_mgmt.update_product', product_id=product['product_id']) }}" method="POST" enctype="multipart/form-data">
+    <label for="product_name">Product Name</label>
+    <input type="text" name="product_name" value="{{ product['product_name'] }}" required>
+
+    <label for="category_name">Category</label>
+    <select name="category_name">
+        <option value="" disabled>Select a category</option>
+        {% for category in categories %}
+            <option value="{{ category['category_id'] }}" 
+                    {% if category['category_id'] == product['category_id'] %} selected {% endif %}>
+                {{ category['category_name'] }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label for="unit_price">Unit Price</label>
+    <input type="text" name="unit_price" value="{{ product['unit_price'] }}" required>
+
+    <label for="variant_size">Variant Size</label>
+    <input type="text" name="variant_size" value="{{ product['variant_size'] }}" required>
+
+    <label for="shelf_life_days">Shelf Life (Days)</label>
+    <input type="number" name="shelf_life_days" value="{{ product['shelf_life_days'] }}" required>
+
+    <label for="product_image">Product Image</label>
+    <input type="file" name="product_image">
+    
+    <div>
+        <img src="{{ url_for('static', filename=product['product_image']) }}" alt="Product Image" width="100">
+    </div>
+
+    <button type="submit">Update Product</button>
+</form>
+
+{% endblock %}

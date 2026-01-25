@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Manage Products</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Product Name</th>
+      <th>Category</th>
+      <th>Unit Price</th>
+      <th>Variant Size</th>
+      <th>Shelf Life Days</th>
+      <th>Product Image</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for product in products %}
+      <tr>
+        <td>{{ product['product_name'] }}</td>
+        <td>{{ product['category_name'] }}</td>
+        <td>{{ product['unit_price'] }}</td>
+        <td>{{ product['variant_size'] }}</td>
+        <td>{{ product['shelf_life_days'] }}</td>
+        <td><img src="{{ url_for('static', filename=product['product_image']) }}" width="100"></td>
+        <td>
+          <a href="{{ url_for('product_mgmt.update_product', product_id=product['product_id']) }}">Edit</a>
+          <a href="{{ url_for('product_mgmt.delete_product', product_id=product['product_id']) }}" onclick="return confirm('Are you sure?')">Delete</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="{{ url_for('product_mgmt.add_product') }}">Add New Product</a>
+
+{% endblock %}

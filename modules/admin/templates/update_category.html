@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Update Category</h2>
+<form method="POST" enctype="multipart/form-data">
+  <div>
+    <label for="category_name">Category Name</label>
+    <input type="text" id="category_name" name="category_name" value="{{ category['category_name'] }}" required>
+  </div>
+  <div>
+    <label for="description">Description</label>
+    <textarea id="description" name="description">{{ category['description'] }}</textarea>
+  </div>
+  <button type="submit">Update Category</button>
+</form>
+{% endblock %}
