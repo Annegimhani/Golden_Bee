@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Manage Stock</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Search Form -->
+    <form method="GET" action="{{ url_for('stock_mgmt.search_stock') }}" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Search products..." 
+                   value="{{ search_query if search_query else '' }}">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+    
+    <!-- Stock Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Unit Price</th>
+                    <th>Variant</th>
+                    <th>Shelf Life</th>
+                    <th>Quantity</th>
+                    <th>Added Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if stock_items %}
+                    {% for item in stock_items %}
+                    <tr>
+                        <td>{{ item.stock_id }}</td>
+                        <td>{{ item.product_name or 'N/A' }}</td>
+                        <td>{{ item.category_name or 'N/A' }}</td>
+                        <td>${{ "%.2f"|format(item.unit_price) if item.unit_price else '0.00' }}</td>
+                        <td>{{ item.variant_size or 'Standard' }}</td>
+                        <td>{{ item.shelf_life_days or '0' }} days</td>
+                        <td>{{ item.quantity or '0' }}</td>
+                        <td>{{ item.formatted_date if item.formatted_date else (item.add_date or 'N/A') }}</td>
+                        <td>
+                            <a href="{{ url_for('stock_mgmt.update_stock', stock_id=item.stock_id) }}" 
+                               class="btn btn-sm btn-warning">Edit</a>
+                            <form action="{{ url_for('stock_mgmt.delete_stock', stock_id=item.stock_id) }}" 
+                                  method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger" 
+                                        onclick="return confirm('Are you sure you want to delete this item?')">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center">No stock items found.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{{ url_for('stock_mgmt.stock_summary') }}" class="btn btn-info">
+    <i class="fas fa-chart-pie"></i> View Summary
+</a>
+    
+    <a href="{{ url_for('stock_mgmt.add_stock') }}" class="btn btn-success">Add New Stock</a>
+</div>
+{% endblock %}

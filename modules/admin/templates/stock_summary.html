@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Stock Summary Report</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Products</h5>
+                    <h2 class="card-text">{{ total_items }}</h2>
+                    <p class="card-text">Unique products in stock</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Total Quantity</h5>
+                    <h2 class="card-text">{{ total_quantity_all }}</h2>
+                    <p class="card-text">Total units in stock</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Total Value</h5>
+                    <h2 class="card-text">${{ "%.2f"|format(total_value_all) }}</h2>
+                    <p class="card-text">Total inventory value</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search products...">
+                </div>
+                <div class="col-md-3">
+                    <select id="categoryFilter" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for item in stock_summary|map(attribute='category_name')|unique|sort %}
+                            <option value="{{ item }}">{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-secondary" onclick="resetFilters()">Reset Filters</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stock Summary Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Product-wise Stock Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="stockSummaryTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Unit Price</th>
+                            <th>Variant</th>
+                            <th>Total Quantity</th>
+                            <th>Total Value</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if stock_summary %}
+                            {% for item in stock_summary %}
+                            <tr class="summary-row" data-category="{{ item.category_name }}">
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.product_name }}</td>
+                                <td>{{ item.category_name }}</td>
+                                <td>${{ "%.2f"|format(item.unit_price) }}</td>
+                                <td>{{ item.variant_size }}</td>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill">{{ item.total_quantity }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success rounded-pill">${{ "%.2f"|format(item.total_price) }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('stock_mgmt.manage_stock') }}?q={{ item.product_name }}" 
+                                       class="btn btn-sm btn-info" title="View Details">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center">No stock data available</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                    <tfoot class="table-secondary">
+                        <tr>
+                            <td colspan="5" class="text-end"><strong>Grand Totals:</strong></td>
+                            <td><strong>{{ total_quantity_all }}</strong></td>
+                            <td><strong>${{ "%.2f"|format(total_value_all) }}</strong></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Export Options -->
+    <div class="mt-3">
+        <button class="btn btn-outline-primary" onclick="exportToCSV()">
+            <i class="bi bi-download"></i> Export to CSV
+        </button>
+        <button class="btn btn-outline-success" onclick="printSummary()">
+            <i class="bi bi-printer"></i> Print Summary
+        </button>
+        <a href="{{ url_for('stock_mgmt.manage_stock') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Manage Stock
+        </a>
+    </div>
+</div>
+
+<!-- Add some CSS for better appearance -->
+<style>
+    .card {
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .table th {
+        background-color: #000000;
+        font-weight: 600;
+    }
+    .badge {
+        font-size: 0.9em;
+        padding: 5px 10px;
+    }
+    tfoot td {
+        font-size: 1.1em;
+        background-color: #e9ecef !important;
+    }
+    .summary-row:hover {
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+</style>
+
+<!-- JavaScript for filtering and export -->
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchText = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#stockSummaryTable tbody tr.summary-row');
+        
+        rows.forEach(row => {
+            const productName = row.cells[1].textContent.toLowerCase();
+            const category = row.cells[2].textContent.toLowerCase();
+            const variant = row.cells[4].textContent.toLowerCase();
+            
+            if (productName.includes(searchText) || 
+                category.includes(searchText) || 
+                variant.includes(searchText)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+    
+    // Category filter
+    document.getElementById('categoryFilter').addEventListener('change', function() {
+        const selectedCategory = this.value;
+        const rows = document.querySelectorAll('#stockSummaryTable tbody tr.summary-row');
+        
+        rows.forEach(row => {
+            const rowCategory = row.getAttribute('data-category');
+            
+            if (!selectedCategory || rowCategory === selectedCategory) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+    
+    // Reset filters
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('categoryFilter').value = '';
+        
+        const rows = document.querySelectorAll('#stockSummaryTable tbody tr.summary-row');
+        rows.forEach(row => {
+            row.style.display = '';
+        });
+    }
+    
+    // Export to CSV
+    function exportToCSV() {
+        let csv = [];
+        
+        // Add headers
+        const headers = ['Product Name', 'Category', 'Unit Price', 'Variant', 'Total Quantity', 'Total Value'];
+        csv.push(headers.join(','));
+        
+        // Add data rows
+        const rows = document.querySelectorAll('#stockSummaryTable tbody tr.summary-row');
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const cells = row.querySelectorAll('td');
+                const rowData = [
+                    cells[1].textContent,
+                    cells[2].textContent,
+                    cells[3].textContent.replace('$', ''),
+                    cells[4].textContent,
+                    cells[5].querySelector('.badge').textContent,
+                    cells[6].querySelector('.badge').textContent.replace('$', '')
+                ];
+                csv.push(rowData.join(','));
+            }
+        });
+        
+        // Add totals row
+        const tfoot = document.querySelector('#stockSummaryTable tfoot tr');
+        const totalCells = tfoot.querySelectorAll('td');
+        const totalsRow = [
+            '', '', '', '',
+            totalCells[1].textContent,
+            totalCells[2].textContent.replace('$', '')
+        ];
+        csv.push(['','','','','GRAND TOTAL','']);
+        csv.push(totalsRow.join(','));
+        
+        // Create download link
+        const csvContent = csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'stock_summary_' + new Date().toISOString().split('T')[0] + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+    
+    // Print summary
+    function printSummary() {
+        const printContent = document.querySelector('.container').innerHTML;
+        const originalContent = document.body.innerHTML;
+        
+        document.body.innerHTML = `
+            <html>
+                <head>
+                    <title>Stock Summary Report</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        @media print {
+                            .no-print { display: none !important; }
+                            .card { border: none !important; box-shadow: none !important; }
+                            .table { width: 100%; }
+                        }
+                        body { padding: 20px; }
+                        h2 { color: #333; }
+                    </style>
+                </head>
+                <body>
+                    ${printContent}
+                    <div class="no-print text-center mt-4">
+                        <button onclick="window.print()" class="btn btn-primary">Print</button>
+                        <button onclick="window.close()" class="btn btn-secondary">Close</button>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        };
+                    <\/script>
+                </body>
+            </html>
+        `;
+        
+        // Restore original content after printing
+        window.onafterprint = function() {
+            document.body.innerHTML = originalContent;
+            window.location.reload();
+        };
+    }
+    
+    // Sort table by column
+    function sortTable(columnIndex) {
+        const table = document.getElementById('stockSummaryTable');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr.summary-row'));
+        
+        const isNumeric = columnIndex === 5 || columnIndex === 6; // Quantity and Value columns
+        
+        rows.sort((a, b) => {
+            let aValue = a.cells[columnIndex].textContent;
+            let bValue = b.cells[columnIndex].textContent;
+            
+            if (isNumeric) {
+                // Extract numbers from badges
+                aValue = parseFloat(aValue.replace(/[^0-9.-]+/g, '')) || 0;
+                bValue = parseFloat(bValue.replace(/[^0-9.-]+/g, '')) || 0;
+                return bValue - aValue; // Descending for numbers
+            } else {
+                return aValue.localeCompare(bValue); // Ascending for text
+            }
+        });
+        
+        // Reorder rows
+        rows.forEach(row => tbody.appendChild(row));
+    }
+</script>
+
+<!-- Add Font Awesome for icons (if not already included) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+{% endblock %}
