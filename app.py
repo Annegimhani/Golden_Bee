@@ -8,8 +8,11 @@ from modules.admin import distributor_routes as distributor_mgmt_routes
 from modules.admin import category_routes as category_mgmt_routes  # Import category routes
 from modules.admin import product_routes as product_mgmt_routes  # Import product management routes
 from modules.admin import stock_routes as stock_mgmt_routes
+from modules.admin import orderad_routes as orderad_mgmt_routes
 
 from modules.distributor import routes as distributor_routes
+from modules.distributor import order_routes as distributor_order_routes
+from modules.distributor import stock_routes as distributor_stock_routes  
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -36,6 +39,13 @@ product_mgmt_routes.bcrypt = bcrypt  # Inject bcrypt into the product management
 product_mgmt_routes.mysql = mysql  # Inject mysql into the product management blueprint
 stock_mgmt_routes.bcrypt = bcrypt  # Inject bcrypt into the stock management blueprint
 stock_mgmt_routes.mysql = mysql 
+distributor_order_routes.bcrypt = bcrypt  
+distributor_order_routes.mysql = mysql
+orderad_mgmt_routes.bcrypt = bcrypt  
+orderad_mgmt_routes.mysql = mysql
+distributor_stock_routes.bcrypt = bcrypt 
+distributor_stock_routes.mysql = mysql   
+
 
 
 # Register Blueprints
@@ -44,8 +54,12 @@ app.register_blueprint(distributor_mgmt_routes.distributor_mgmt_bp, url_prefix='
 app.register_blueprint(category_mgmt_routes.category_mgmt_bp, url_prefix='/admin')  # Register category management blueprint
 app.register_blueprint(product_mgmt_routes.product_mgmt_bp, url_prefix='/admin')  # Register product management blueprint
 app.register_blueprint(stock_mgmt_routes.stock_mgmt_bp, url_prefix='/admin')
+app.register_blueprint(orderad_mgmt_routes.orderad_mgmt_bp, url_prefix='/admin')
 
 app.register_blueprint(distributor_routes.distributor_bp, url_prefix='/distributor')
+app.register_blueprint(distributor_order_routes.distributor_order_bp, url_prefix='/distributor')
+app.register_blueprint(distributor_stock_routes.distributor_stock_bp, url_prefix='/distributor') 
+
 
 if __name__ == '__main__':
     app.run(debug=True)

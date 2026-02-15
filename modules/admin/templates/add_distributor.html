@@ -1,35 +1,681 @@
 {% extends "base.html" %}
 
+{% block title %}Add Distributor - Golden Bee{% endblock %}
+{% block page_title %}Add New Distributor{% endblock %}
+{% block breadcrumb %}Distributors › Add New{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('distributor_mgmt.manage_distributors') }}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i>
+    <span>Back to List</span>
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E5E7EB;
+        overflow: hidden;
+    }
+
+    .form-header {
+        padding: 24px 32px;
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .form-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-header-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .form-body {
+        padding: 32px;
+    }
+
+    .form-section {
+        margin-bottom: 32px;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #F3F4F6;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-icon {
+        width: 32px;
+        height: 32px;
+        background: #FDB022;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #1F2937;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    label .required {
+        color: #EF4444;
+        font-size: 16px;
+    }
+
+    label i {
+        color: #9CA3AF;
+        font-size: 14px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+        padding: 12px 16px;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        background: #F9FAFB;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        border-color: #FDB022;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(253, 176, 34, 0.1);
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Image Upload */
+    .image-upload-container {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+    }
+
+    .image-preview-container {
+        flex-shrink: 0;
+    }
+
+    .image-preview {
+        width: 140px;
+        height: 140px;
+        border-radius: 16px;
+        border: 3px dashed #E5E7EB;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #F9FAFB;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: none;
+    }
+
+    .image-preview.has-image img {
+        display: block;
+    }
+
+    .image-preview.has-image .placeholder {
+        display: none;
+    }
+
+    .placeholder {
+        text-align: center;
+        color: #9CA3AF;
+    }
+
+    .placeholder i {
+        font-size: 40px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .placeholder-text {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .file-input-wrapper {
+        flex: 1;
+    }
+
+    .file-input-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: #F3F4F6;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 12px;
+    }
+
+    .file-input-label:hover {
+        background: #E5E7EB;
+        border-color: #D1D5DB;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .file-info {
+        font-size: 13px;
+        color: #6B7280;
+        line-height: 1.6;
+    }
+
+    .file-name {
+        font-weight: 600;
+        color: #111827;
+        margin-top: 8px;
+        font-size: 13px;
+        display: none;
+    }
+
+    .file-name.show {
+        display: block;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        padding: 24px 32px;
+        background: #F9FAFB;
+        border-top: 1px solid #E5E7EB;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        color: #1F2937;
+        box-shadow: 0 2px 8px rgba(253, 176, 34, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(253, 176, 34, 0.4);
+    }
+
+    .btn-secondary {
+        background: #F3F4F6;
+        color: #374151;
+        border: 1px solid #E5E7EB;
+    }
+
+    .btn-secondary:hover {
+        background: #E5E7EB;
+    }
+
+    /* Helper Text */
+    .helper-text {
+        font-size: 12px;
+        color: #6B7280;
+        margin-top: 6px;
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .helper-text i {
+        margin-top: 2px;
+        font-size: 12px;
+    }
+
+    /* Password Strength */
+    .password-strength {
+        margin-top: 8px;
+        display: none;
+    }
+
+    .password-strength.show {
+        display: block;
+    }
+
+    .strength-bar {
+        height: 4px;
+        background: #E5E7EB;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 6px;
+    }
+
+    .strength-fill {
+        height: 100%;
+        transition: all 0.3s ease;
+        width: 0%;
+    }
+
+    .strength-weak .strength-fill {
+        width: 33%;
+        background: #EF4444;
+    }
+
+    .strength-medium .strength-fill {
+        width: 66%;
+        background: #F59E0B;
+    }
+
+    .strength-strong .strength-fill {
+        width: 100%;
+        background: #10B981;
+    }
+
+    .strength-text {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-body {
+            padding: 24px;
+        }
+
+        .form-actions {
+            padding: 20px 24px;
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .image-upload-container {
+            flex-direction: column;
+        }
+
+        .image-preview {
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2>Add New Distributor</h2>
-<form method="POST" enctype="multipart/form-data">
-  <label for="distributor_name">Distributor Name</label>
-  <input type="text" name="distributor_name" required>
+<div class="form-container">
+    <form method="POST" enctype="multipart/form-data" class="form-card" id="distributorForm">
+        <!-- Form Header -->
+        <div class="form-header">
+            <h2>
+                <div class="form-header-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                Add New Distributor
+            </h2>
+        </div>
 
-  <label for="district">District</label>
-  <input type="text" name="district">
+        <!-- Form Body -->
+        <div class="form-body">
+            <!-- Business Information Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    Business Information
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-store"></i>
+                            Distributor Name
+                            <span class="required">*</span>
+                        </label>
+                        <input type="text" name="distributor_name" required placeholder="Enter business name">
+                    </div>
 
-  <label for="province">Province</label>
-  <input type="text" name="province">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-user"></i>
+                            Owner Name
+                            <span class="required">*</span>
+                        </label>
+                        <input type="text" name="owner_name" required placeholder="Enter owner name">
+                    </div>
+                </div>
+            </div>
 
-  <label for="owner_name">Owner Name</label>
-  <input type="text" name="owner_name">
+            <!-- Location Information Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    Location Information
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-map-pin"></i>
+                            District
+                            <span class="required">*</span>
+                        </label>
+                        <input type="text" name="district" required placeholder="Enter district">
+                    </div>
 
-  <label for="contact_no">Contact No</label>
-  <input type="text" name="contact_no">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-map"></i>
+                            Province
+                            <span class="required">*</span>
+                        </label>
+                        <input type="text" name="province" required placeholder="Enter province">
+                    </div>
 
-  <label for="address">Address</label>
-  <textarea name="address"></textarea>
+                    <div class="form-group full-width">
+                        <label>
+                            <i class="fas fa-home"></i>
+                            Address
+                        </label>
+                        <textarea name="address" placeholder="Enter full address (optional)"></textarea>
+                        <div class="helper-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Provide the complete business address including street, city, and postal code</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-  <label for="email">Email</label>
-  <input type="email" name="email" required>
+            <!-- Contact Information Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">
+                        <i class="fas fa-address-card"></i>
+                    </div>
+                    Contact Information
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-phone"></i>
+                            Contact Number
+                            <span class="required">*</span>
+                        </label>
+                        <input type="text" name="contact_no" required placeholder="0771234567">
+                        <div class="helper-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Enter a valid phone number</span>
+                        </div>
+                    </div>
 
-  <label for="password">Password</label>
-  <input type="password" name="password" required>
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-envelope"></i>
+                            Email Address
+                            <span class="required">*</span>
+                        </label>
+                        <input type="email" name="email" required placeholder="distributor@example.com">
+                        <div class="helper-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>This will be used for login</span>
+                        </div>
+                    </div>
 
-  <label for="distributor_image">Distributor Image</label>
-  <input type="file" name="distributor_image">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-lock"></i>
+                            Password
+                            <span class="required">*</span>
+                        </label>
+                        <input type="password" name="password" id="password" required placeholder="Enter password">
+                        <div class="password-strength" id="passwordStrength">
+                            <div class="strength-bar">
+                                <div class="strength-fill"></div>
+                            </div>
+                            <div class="strength-text"></div>
+                        </div>
+                        <div class="helper-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Minimum 6 characters recommended</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-  <button type="submit">Add Distributor</button>
-</form>
+            <!-- Profile Image Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    Profile Image
+                </div>
+                <div class="image-upload-container">
+                    <div class="image-preview-container">
+                        <div class="image-preview" id="imagePreview">
+                            <div class="placeholder">
+                                <i class="fas fa-camera"></i>
+                                <div class="placeholder-text">Image Preview</div>
+                            </div>
+                            <img id="previewImg" alt="Preview">
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label for="distributor_image" class="file-input-label">
+                            <i class="fas fa-upload"></i>
+                            Choose Image
+                        </label>
+                        <input type="file" name="distributor_image" id="distributor_image" accept="image/*">
+                        <div class="file-info">
+                            <strong>Supported formats:</strong> JPG, PNG, GIF (Max 5MB)<br>
+                            <strong>Recommended size:</strong> 500x500 pixels
+                        </div>
+                        <div class="file-name" id="fileName"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <a href="{{ url_for('distributor_mgmt.manage_distributors') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i>
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check"></i>
+                Add Distributor
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Image Preview
+    const imageInput = document.getElementById('distributor_image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const fileName = document.getElementById('fileName');
+
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file) {
+            // Show file name
+            fileName.textContent = `Selected: ${file.name}`;
+            fileName.classList.add('show');
+            
+            // Show image preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                imagePreview.classList.add('has-image');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            fileName.classList.remove('show');
+            imagePreview.classList.remove('has-image');
+        }
+    });
+
+    // Password Strength Indicator
+    const passwordInput = document.getElementById('password');
+    const passwordStrength = document.getElementById('passwordStrength');
+
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        
+        if (password.length === 0) {
+            passwordStrength.classList.remove('show');
+            return;
+        }
+        
+        passwordStrength.classList.add('show');
+        
+        let strength = 0;
+        if (password.length >= 6) strength++;
+        if (password.length >= 10) strength++;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^a-zA-Z0-9]/.test(password)) strength++;
+        
+        // Remove all strength classes
+        passwordStrength.classList.remove('strength-weak', 'strength-medium', 'strength-strong');
+        
+        const strengthText = passwordStrength.querySelector('.strength-text');
+        
+        if (strength <= 2) {
+            passwordStrength.classList.add('strength-weak');
+            strengthText.textContent = 'Weak password';
+            strengthText.style.color = '#EF4444';
+        } else if (strength <= 3) {
+            passwordStrength.classList.add('strength-medium');
+            strengthText.textContent = 'Medium password';
+            strengthText.style.color = '#F59E0B';
+        } else {
+            passwordStrength.classList.add('strength-strong');
+            strengthText.textContent = 'Strong password';
+            strengthText.style.color = '#10B981';
+        }
+    });
+
+    // Form validation
+    const form = document.getElementById('distributorForm');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.style.borderColor = '#EF4444';
+            } else {
+                field.style.borderColor = '#E5E7EB';
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields');
+        }
+    });
+
+    // Reset border color on input
+    document.querySelectorAll('input[required], textarea[required]').forEach(field => {
+        field.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.style.borderColor = '#E5E7EB';
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -1,111 +1,531 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Stock</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container mt-4">
-        <h1 class="mb-4">Update Stock Item</h1>
+{% extends "base.html" %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+{% block title %}Update Stock - Golden Bee{% endblock %}
+{% block page_title %}Update Stock{% endblock %}
+{% block breadcrumb %}Stock › Update{% endblock %}
 
-        <form method="POST">
-            <!-- Category Dropdown -->
-            <div class="mb-3">
-                <label for="category_id" class="form-label">Category:</label>
-                <select id="category_id" name="category_id" class="form-select" required>
-                    <option value="">Select Category</option>
-                    {% for category in categories %}
-                        <option value="{{ category.category_id }}" 
-                                {% if category.category_id == stock_item.category_id %}selected{% endif %}>
-                            {{ category.category_name }}
-                        </option>
-                    {% endfor %}
-                </select>
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E5E7EB;
+        overflow: hidden;
+    }
+
+    .form-header {
+        padding: 24px 32px;
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .form-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-header-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .form-body {
+        padding: 32px;
+    }
+
+    /* Flash Messages */
+    .flash-messages {
+        margin-bottom: 24px;
+    }
+
+    .alert {
+        padding: 14px 20px;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .alert i {
+        font-size: 18px;
+    }
+
+    .alert-success {
+        background: #D1FAE5;
+        border: 1px solid #6EE7B7;
+        color: #065F46;
+    }
+
+    .alert-danger {
+        background: #FEE2E2;
+        border: 1px solid #FCA5A5;
+        color: #991B1B;
+    }
+
+    .alert-warning {
+        background: #FEF3C7;
+        border: 1px solid #FCD34D;
+        color: #92400E;
+    }
+
+    .alert-info {
+        background: #DBEAFE;
+        border: 1px solid #93C5FD;
+        color: #1E40AF;
+    }
+
+    .form-section {
+        margin-bottom: 32px;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #F3F4F6;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-icon {
+        width: 32px;
+        height: 32px;
+        background: #FDB022;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #1F2937;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    label .required {
+        color: #EF4444;
+        font-size: 16px;
+    }
+
+    label i {
+        color: #9CA3AF;
+        font-size: 14px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+        padding: 12px 16px;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        background: #F9FAFB;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+        outline: none;
+        border-color: #FDB022;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(253, 176, 34, 0.1);
+    }
+
+    select {
+        cursor: pointer;
+    }
+
+    .helper-text {
+        font-size: 12px;
+        color: #6B7280;
+        margin-top: 6px;
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .helper-text i {
+        margin-top: 2px;
+        font-size: 12px;
+    }
+
+    .current-info {
+        background: #F0F9FF;
+        border: 1px solid #BAE6FD;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: #0369A1;
+    }
+
+    .current-info i {
+        font-size: 16px;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        padding: 24px 32px;
+        background: #F9FAFB;
+        border-top: 1px solid #E5E7EB;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        color: #1F2937;
+        box-shadow: 0 2px 8px rgba(253, 176, 34, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(253, 176, 34, 0.4);
+    }
+
+    .btn-secondary {
+        background: #F3F4F6;
+        color: #374151;
+        border: 1px solid #E5E7EB;
+    }
+
+    .btn-secondary:hover {
+        background: #E5E7EB;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-body {
+            padding: 24px;
+        }
+
+        .form-actions {
+            padding: 20px 24px;
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" class="form-card" id="stockForm">
+        <!-- Form Header -->
+        <div class="form-header">
+            <h2>
+                <div class="form-header-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                Update Stock Item
+            </h2>
+        </div>
+
+        <!-- Form Body -->
+        <div class="form-body">
+            <!-- Current Info -->
+            <div class="current-info">
+                <i class="fas fa-info-circle"></i>
+                <span>Updating stock item #{{ stock_item.stock_id }}. Modify the fields below and click Update Stock.</span>
             </div>
 
-            <!-- Product Dropdown -->
-            <div class="mb-3">
-                <label for="product_id" class="form-label">Product:</label>
-                <select id="product_id" name="product_id" class="form-select" required>
-                    <option value="">Select Product</option>
-                    {% for product in products %}
-                        <option value="{{ product.product_id }}" 
-                                {% if product.product_id == stock_item.product_id %}selected{% endif %}>
-                            {{ product.product_name }}
-                        </option>
-                    {% endfor %}
-                </select>
+            <!-- Product Selection Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    Product Information
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-tag"></i>
+                            Category
+                            <span class="required">*</span>
+                        </label>
+                        <select name="category_id" id="category_id" required>
+                            <option value="">Select a category</option>
+                            {% for category in categories %}
+                                <option value="{{ category.category_id }}" 
+                                    {% if category.category_id == stock_item.category_id %}selected{% endif %}>
+                                    {{ category.category_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="helper-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Product category</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-box"></i>
+                            Product
+                            <span class="required">*</span>
+                        </label>
+                        <select name="product_id" id="product_id" required>
+                            <option value="">Select product</option>
+                            {% for product in products %}
+                                <option value="{{ product.product_id }}" 
+                                    {% if product.product_id == stock_item.product_id %}selected{% endif %}>
+                                    {{ product.product_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="helper-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Product name</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Unit Price -->
-            <div class="mb-3">
-                <label for="unit_price" class="form-label">Unit Price:</label>
-                <input type="number" id="unit_price" name="unit_price" class="form-control" 
-                       value="{{ stock_item.unit_price }}" step="0.01" min="0" required>
+            <!-- Stock Details Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    Stock Details
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-money-bill-wave"></i>
+                            Unit Price (Rs.)
+                            <span class="required">*</span>
+                        </label>
+                        <input type="number" name="unit_price" id="unit_price" value="{{ stock_item.unit_price }}" required placeholder="0.00" step="0.01" min="0">
+                        <div class="helper-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Price per unit item</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-weight"></i>
+                            Variant Size
+                            <span class="required">*</span>
+                        </label>
+                        <input type="text" name="variant_size" id="variant_size" value="{{ stock_item.variant_size }}" required placeholder="e.g., 500g, 1L, Medium">
+                        <div class="helper-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Specify size or quantity</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="far fa-clock"></i>
+                            Shelf Life (Days)
+                            <span class="required">*</span>
+                        </label>
+                        <input type="number" name="shelf_life_days" id="shelf_life_days" value="{{ stock_item.shelf_life_days }}" required placeholder="0" min="1">
+                        <div class="helper-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Number of days product remains fresh</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-boxes"></i>
+                            Quantity
+                            <span class="required">*</span>
+                        </label>
+                        <input type="number" name="quantity" id="quantity" value="{{ stock_item.quantity }}" required placeholder="0" min="1">
+                        <div class="helper-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Number of units in stock</span>
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <!-- Variant Size -->
-            <div class="mb-3">
-                <label for="variant_size" class="form-label">Variant Size:</label>
-                <input type="text" id="variant_size" name="variant_size" class="form-control" 
-                       value="{{ stock_item.variant_size }}" required>
-            </div>
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <a href="{{ url_for('stock_mgmt.manage_stock') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i>
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                Update Stock
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
 
-            <!-- Shelf Life Days -->
-            <div class="mb-3">
-                <label for="shelf_life_days" class="form-label">Shelf Life (in days):</label>
-                <input type="number" id="shelf_life_days" name="shelf_life_days" class="form-control" 
-                       value="{{ stock_item.shelf_life_days }}" min="1" required>
-            </div>
+{% block extra_js %}
+<script>
+    // Update product dropdown when category changes
+    document.getElementById('category_id').addEventListener('change', function() {
+        const categoryId = this.value;
+        const productSelect = document.getElementById('product_id');
+        
+        // Store current product selection
+        const currentProductId = productSelect.value;
+        
+        // Reset product dropdown
+        productSelect.innerHTML = '<option value="">Select Product</option>';
+        
+        if (categoryId) {
+            // Fetch products for selected category
+            fetch('/admin/get_products/' + categoryId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.products && data.products.length > 0) {
+                        data.products.forEach(product => {
+                            const option = document.createElement('option');
+                            option.value = product.product_id;
+                            option.textContent = product.product_name;
+                            
+                            // Reselect the current product if it's in the new list
+                            if (product.product_id == currentProductId) {
+                                option.selected = true;
+                            }
+                            
+                            productSelect.appendChild(option);
+                        });
+                    } else {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'No products available';
+                        productSelect.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching products:', error);
+                    alert('Error loading products. Please try again.');
+                });
+        }
+    });
 
-            <!-- Quantity -->
-            <div class="mb-3">
-                <label for="quantity" class="form-label">Quantity:</label>
-                <input type="number" id="quantity" name="quantity" class="form-control" 
-                       value="{{ stock_item.quantity }}" min="1" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Update Stock</button>
-            <a href="{{ url_for('stock_mgmt.manage_stock') }}" class="btn btn-secondary">Cancel</a>
-        </form>
-    </div>
-
-    <script>
-        // Update product dropdown when category changes
-        document.getElementById('category_id').addEventListener('change', function() {
-            const categoryId = this.value;
-            const productSelect = document.getElementById('product_id');
-            
-            // Reset product dropdown
-            productSelect.innerHTML = '<option value="">Select Product</option>';
-            
-            if (categoryId) {
-                // Fetch products for selected category
-                fetch('/admin/get_products/' + categoryId)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.products && data.products.length > 0) {
-                            data.products.forEach(product => {
-                                const option = document.createElement('option');
-                                option.value = product.product_id;
-                                option.textContent = product.product_name;
-                                productSelect.appendChild(option);
-                            });
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
+    // Form validation
+    const form = document.getElementById('stockForm');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.style.borderColor = '#EF4444';
+            } else {
+                field.style.borderColor = '#E5E7EB';
             }
         });
-    </script>
-</body>
-</html>
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields');
+        }
+    });
+
+    // Reset border color on input
+    document.querySelectorAll('input[required], select[required]').forEach(field => {
+        field.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.style.borderColor = '#E5E7EB';
+            }
+        });
+        
+        field.addEventListener('change', function() {
+            if (this.value.trim()) {
+                this.style.borderColor = '#E5E7EB';
+            }
+        });
+    });
+</script>
+{% endblock %}

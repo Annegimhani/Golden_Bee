@@ -1,30 +1,681 @@
 {% extends "base.html" %}
 
+{% block title %}Manage Stock - Golden Bee{% endblock %}
+{% block page_title %}Stock Management{% endblock %}
+{% block breadcrumb %}Stock{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Stats Cards */
+    .stats-grid {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px 24px;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.2s ease;
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .stat-icon.primary {
+        background: #FDB022;
+        color: #1F2937;
+    }
+
+    .stat-icon.success {
+        background: #10B981;
+        color: white;
+    }
+
+    .stat-icon.warning {
+        background: #F59E0B;
+        color: white;
+    }
+
+    .stat-icon.danger {
+        background: #EF4444;
+        color: white;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #6B7280;
+        font-weight: 500;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1;
+    }
+
+    /* Flash Messages */
+    .flash-messages {
+        margin-bottom: 24px;
+    }
+
+    .alert {
+        padding: 14px 20px;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .alert i {
+        font-size: 18px;
+    }
+
+    .alert-success {
+        background: #D1FAE5;
+        border: 1px solid #6EE7B7;
+        color: #065F46;
+    }
+
+    .alert-danger {
+        background: #FEE2E2;
+        border: 1px solid #FCA5A5;
+        color: #991B1B;
+    }
+
+    .alert-warning {
+        background: #FEF3C7;
+        border: 1px solid #FCD34D;
+        color: #92400E;
+    }
+
+    .alert-info {
+        background: #DBEAFE;
+        border: 1px solid #93C5FD;
+        color: #1E40AF;
+    }
+
+    /* Action Bar */
+    .action-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .search-box {
+        position: relative;
+        flex: 1;
+        min-width: 250px;
+        max-width: 400px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 16px 10px 42px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #FDB022;
+        box-shadow: 0 0 0 3px rgba(253, 176, 34, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9CA3AF;
+        font-size: 16px;
+        pointer-events: none;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        color: #1F2937;
+        box-shadow: 0 2px 8px rgba(253, 176, 34, 0.2);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(253, 176, 34, 0.3);
+    }
+
+    .btn-secondary {
+        background: #F3F4F6;
+        color: #374151;
+        border: 1px solid #E5E7EB;
+    }
+
+    .btn-secondary:hover {
+        background: #E5E7EB;
+    }
+
+    /* Table Container */
+    .table-container {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        overflow: hidden;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background: #F9FAFB;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    th {
+        padding: 14px 20px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    tbody tr {
+        border-bottom: 1px solid #F3F4F6;
+        transition: all 0.2s ease;
+    }
+
+    tbody tr:hover {
+        background: #F9FAFB;
+    }
+
+    tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    td {
+        padding: 16px 20px;
+        font-size: 14px;
+        color: #111827;
+    }
+
+    .stock-id-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 50px;
+        padding: 4px 10px;
+        background: #F3F4F6;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #374151;
+        font-weight: 600;
+    }
+
+    .product-name-cell {
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: #F3F4F6;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #374151;
+        font-weight: 500;
+    }
+
+    .price-text {
+        font-weight: 700;
+        color: #10B981;
+        font-size: 15px;
+    }
+
+    .variant-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: #E0E7FF;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #3730A3;
+        font-weight: 500;
+    }
+
+    .shelf-life-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: #FEF3C7;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #92400E;
+        font-weight: 500;
+    }
+
+    .quantity-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .quantity-high {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+
+    .quantity-medium {
+        background: #FEF3C7;
+        color: #92400E;
+    }
+
+    .quantity-low {
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+
+    .date-text {
+        font-size: 13px;
+        color: #6B7280;
+    }
+
+    /* Action Buttons */
+    .action-buttons-cell {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        position: relative;
+    }
+
+    .btn-icon i {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 15px;
+        line-height: 1;
+    }
+
+    .btn-edit {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+
+    .btn-edit:hover {
+        background: #3B82F6;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-delete {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+
+    .btn-delete:hover {
+        background: #EF4444;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        color: #D1D5DB;
+        margin-bottom: 16px;
+    }
+
+    .empty-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .empty-text {
+        font-size: 14px;
+        color: #6B7280;
+        margin-bottom: 24px;
+    }
+
+    /* No Results State */
+    .no-results {
+        padding: 40px 20px;
+        text-align: center;
+        display: none;
+    }
+
+    .no-results.show {
+        display: block;
+    }
+
+    .no-results-icon {
+        font-size: 36px;
+        color: #D1D5DB;
+        margin-bottom: 12px;
+    }
+
+    .no-results-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+
+    .no-results-text {
+        font-size: 14px;
+        color: #6B7280;
+    }
+
+    /* Pagination */
+    .pagination {
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #E5E7EB;
+    }
+
+    .pagination-info {
+        font-size: 14px;
+        color: #6B7280;
+    }
+
+    .pagination-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .page-btn {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #374151;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .page-btn:hover:not(:disabled) {
+        background: #F3F4F6;
+        border-color: #D1D5DB;
+    }
+
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .page-btn.active {
+        background: #FDB022;
+        color: #1F2937;
+        border-color: #FDB022;
+        font-weight: 600;
+    }
+
+    /* Tooltip */
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    .tooltip .tooltip-text {
+        visibility: hidden;
+        width: 80px;
+        background-color: #1F2937;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 6px 8px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -40px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 12px;
+    }
+
+    .tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-grid {
+            flex-direction: column;
+        }
+
+        .stat-card {
+            min-width: 100%;
+        }
+
+        .action-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-box {
+            max-width: 100%;
+        }
+
+        .table-container {
+            border-radius: 8px;
+        }
+
+        th, td {
+            padding: 12px 14px;
+            font-size: 13px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2>Manage Stock</h2>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    
-    <!-- Search Form -->
-    <form method="GET" action="{{ url_for('stock_mgmt.search_stock') }}" class="mb-3">
-        <div class="input-group">
-            <input type="text" name="q" class="form-control" placeholder="Search products..." 
-                   value="{{ search_query if search_query else '' }}">
-            <button type="submit" class="btn btn-primary">Search</button>
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+            <span>{{ message }}</span>
         </div>
-    </form>
-    
-    <!-- Stock Table -->
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead class="table-dark">
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-warehouse"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total Stock Items</div>
+            <div class="stat-value" id="totalItems">{{ stock_items|length if stock_items else 0 }}</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-boxes"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total Quantity</div>
+            <div class="stat-value">
+                {% set total_qty = namespace(value=0) %}
+                {% if stock_items %}
+                    {% for item in stock_items %}
+                        {% set total_qty.value = total_qty.value + (item.quantity or 0) %}
+                    {% endfor %}
+                {% endif %}
+                {{ total_qty.value }}
+            </div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Low Stock</div>
+            <div class="stat-value">
+                {% set low_stock = namespace(count=0) %}
+                {% if stock_items %}
+                    {% for item in stock_items %}
+                        {% if (item.quantity or 0) < 10 %}
+                            {% set low_stock.count = low_stock.count + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                {{ low_stock.count }}
+            </div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon danger">
+            <i class="fas fa-box-open"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Out of Stock</div>
+            <div class="stat-value">
+                {% set out_stock = namespace(count=0) %}
+                {% if stock_items %}
+                    {% for item in stock_items %}
+                        {% if (item.quantity or 0) == 0 %}
+                            {% set out_stock.count = out_stock.count + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                {{ out_stock.count }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Bar -->
+<div class="action-bar">
+    <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search by product name, category, variant...">
+    </div>
+    <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="exportTable()">
+            <i class="fas fa-download"></i>
+            <span>Export</span>
+        </button>
+        <button class="btn btn-secondary" onclick="window.print()">
+            <i class="fas fa-print"></i>
+            <span>Print</span>
+        </button>
+        <a href="{{ url_for('stock_mgmt.add_stock') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            <span>Add Stock</span>
+        </a>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="table-container">
+    <div class="table-wrapper">
+        {% if stock_items %}
+        <table id="stockTable">
+            <thead>
                 <tr>
                     <th>ID</th>
                     <th>Product Name</th>
@@ -34,46 +685,220 @@
                     <th>Shelf Life</th>
                     <th>Quantity</th>
                     <th>Added Date</th>
-                    <th>Actions</th>
+                    <th style="text-align: center;">Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                {% if stock_items %}
-                    {% for item in stock_items %}
-                    <tr>
-                        <td>{{ item.stock_id }}</td>
-                        <td>{{ item.product_name or 'N/A' }}</td>
-                        <td>{{ item.category_name or 'N/A' }}</td>
-                        <td>${{ "%.2f"|format(item.unit_price) if item.unit_price else '0.00' }}</td>
-                        <td>{{ item.variant_size or 'Standard' }}</td>
-                        <td>{{ item.shelf_life_days or '0' }} days</td>
-                        <td>{{ item.quantity or '0' }}</td>
-                        <td>{{ item.formatted_date if item.formatted_date else (item.add_date or 'N/A') }}</td>
-                        <td>
-                            <a href="{{ url_for('stock_mgmt.update_stock', stock_id=item.stock_id) }}" 
-                               class="btn btn-sm btn-warning">Edit</a>
-                            <form action="{{ url_for('stock_mgmt.delete_stock', stock_id=item.stock_id) }}" 
-                                  method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-danger" 
-                                        onclick="return confirm('Are you sure you want to delete this item?')">
-                                    Delete
+            <tbody id="tableBody">
+                {% for item in stock_items %}
+                <tr data-search-text="{{ (item.product_name or '') | lower }} {{ (item.category_name or '') | lower }} {{ (item.variant_size or '') | lower }} #{{ item.stock_id }}">
+                    <td>
+                        <span class="stock-id-badge">#{{ item.stock_id }}</span>
+                    </td>
+                    <td>
+                        <div class="product-name-cell">{{ item.product_name or 'N/A' }}</div>
+                    </td>
+                    <td>
+                        <span class="category-badge">
+                            <i class="fas fa-tag"></i>
+                            {{ item.category_name or 'N/A' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="price-text">Rs. {{ "%.2f"|format(item.unit_price) if item.unit_price else '0.00' }}</span>
+                    </td>
+                    <td>
+                        <span class="variant-badge">
+                            <i class="fas fa-weight"></i>
+                            {{ item.variant_size or 'Standard' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="shelf-life-badge">
+                            <i class="far fa-clock"></i>
+                            {{ item.shelf_life_days or '0' }} days
+                        </span>
+                    </td>
+                    <td>
+                        {% set qty = item.quantity or 0 %}
+                        <span class="quantity-badge {% if qty >= 50 %}quantity-high{% elif qty >= 10 %}quantity-medium{% else %}quantity-low{% endif %}">
+                            <i class="fas fa-boxes"></i>
+                            {{ qty }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="date-text">
+                            <i class="far fa-calendar-alt"></i>
+                            {{ item.formatted_date if item.formatted_date else (item.add_date or 'N/A') }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons-cell" style="justify-content: center;">
+                            <a href="{{ url_for('stock_mgmt.update_stock', stock_id=item.stock_id) }}" class="btn-icon btn-edit tooltip">
+                                <i class="fas fa-edit"></i>
+                                <span class="tooltip-text">Edit</span>
+                            </a>
+                            <form action="{{ url_for('stock_mgmt.delete_stock', stock_id=item.stock_id) }}" method="POST" class="d-inline" onsubmit="return confirmDelete('{{ item.product_name or 'this item' }}')">
+                                <button type="submit" class="btn-icon btn-delete tooltip">
+                                    <i class="far fa-trash-alt"></i>
+                                    <span class="tooltip-text">Delete</span>
                                 </button>
                             </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="9" class="text-center">No stock items found.</td>
-                    </tr>
-                {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
+        
+        <!-- No Results Message -->
+        <div class="no-results" id="noResults">
+            <div class="no-results-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="no-results-title">No results found</div>
+            <div class="no-results-text">Try adjusting your search terms</div>
+        </div>
+        
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-warehouse"></i>
+            </div>
+            <div class="empty-title">No stock items found</div>
+            <div class="empty-text">Get started by adding your first stock item</div>
+            <a href="{{ url_for('stock_mgmt.add_stock') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                <span>Add First Stock</span>
+            </a>
+        </div>
+        {% endif %}
     </div>
-    <a href="{{ url_for('stock_mgmt.stock_summary') }}" class="btn btn-info">
-    <i class="fas fa-chart-pie"></i> View Summary
-</a>
     
-    <a href="{{ url_for('stock_mgmt.add_stock') }}" class="btn btn-success">Add New Stock</a>
+    {% if stock_items %}
+    <div class="pagination">
+        <div class="pagination-info">
+            Showing <strong id="visibleCount">{{ stock_items|length }}</strong> of <strong id="totalCount">{{ stock_items|length }}</strong> stock items
+        </div>
+        <div class="pagination-buttons">
+            <button class="page-btn" disabled>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn" disabled>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Client-side Search Functionality
+    const searchInput = document.getElementById('searchInput');
+    const tableBody = document.getElementById('tableBody');
+    const noResults = document.getElementById('noResults');
+    const visibleCountEl = document.getElementById('visibleCount');
+    const totalCountEl = document.getElementById('totalCount');
+    
+    if (searchInput && tableBody) {
+        searchInput.addEventListener('input', function() {
+            const searchValue = this.value.toLowerCase().trim();
+            const rows = tableBody.querySelectorAll('tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const searchText = row.getAttribute('data-search-text') || '';
+                const isVisible = searchText.includes(searchValue);
+                
+                if (isVisible) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update visible count
+            if (visibleCountEl) {
+                visibleCountEl.textContent = visibleCount;
+            }
+            
+            // Show/hide no results message
+            if (noResults) {
+                if (visibleCount === 0 && searchValue !== '') {
+                    noResults.classList.add('show');
+                    if (tableBody.parentElement.querySelector('table')) {
+                        tableBody.parentElement.querySelector('table').style.display = 'none';
+                    }
+                } else {
+                    noResults.classList.remove('show');
+                    if (tableBody.parentElement.querySelector('table')) {
+                        tableBody.parentElement.querySelector('table').style.display = 'table';
+                    }
+                }
+            }
+        });
+    }
+
+    // Delete Confirmation
+    function confirmDelete(itemName) {
+        return confirm(`Are you sure you want to delete "${itemName}"?\n\nThis action cannot be undone.`);
+    }
+
+    // Export to CSV
+    function exportTable() {
+        const table = document.getElementById('stockTable');
+        if (!table) return;
+        
+        let csv = [];
+        
+        // Headers
+        const headers = Array.from(table.querySelectorAll('thead th'))
+            .slice(0, -1) // Exclude actions column
+            .map(th => th.textContent.trim());
+        csv.push(headers.join(','));
+        
+        // Rows (only visible ones)
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const cols = Array.from(row.querySelectorAll('td'))
+                    .slice(0, -1) // Exclude actions column
+                    .map(td => {
+                        const text = td.textContent.trim().replace(/\s+/g, ' ');
+                        return `"${text.replace(/"/g, '""')}"`;
+                    });
+                csv.push(cols.join(','));
+            }
+        });
+        
+        // Download
+        const csvContent = csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `stock_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Animate stat cards on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.4s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
 {% endblock %}

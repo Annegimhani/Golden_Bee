@@ -1,33 +1,978 @@
 {% extends "base.html" %}
 
+{% block title %}Manage Distributors - Golden Bee{% endblock %}
+{% block page_title %}Distributors{% endblock %}
+{% block breadcrumb %}Distributors{% endblock %}
+
+{% block topbar_actions %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Stats Cards */
+    .stats-grid {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px 24px;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.2s ease;
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .stat-icon.primary {
+        background: #FDB022;
+        color: #1F2937;
+    }
+
+    .stat-icon.success {
+        background: #10B981;
+        color: white;
+    }
+
+    .stat-icon.info {
+        background: #3B82F6;
+        color: white;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #6B7280;
+        font-weight: 500;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1;
+    }
+
+    /* Action Bar */
+    .action-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .search-box {
+        position: relative;
+        flex: 1;
+        min-width: 250px;
+        max-width: 400px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 16px 10px 42px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #FDB022;
+        box-shadow: 0 0 0 3px rgba(253, 176, 34, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9CA3AF;
+        font-size: 16px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        color: #1F2937;
+        box-shadow: 0 2px 8px rgba(253, 176, 34, 0.2);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(253, 176, 34, 0.3);
+    }
+
+    .btn-secondary {
+        background: #F3F4F6;
+        color: #374151;
+        border: 1px solid #E5E7EB;
+    }
+
+    .btn-secondary:hover {
+        background: #E5E7EB;
+    }
+
+    /* Table Container */
+    .table-container {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        overflow: hidden;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background: #F9FAFB;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    th {
+        padding: 14px 20px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    tbody tr {
+        border-bottom: 1px solid #F3F4F6;
+        transition: all 0.2s ease;
+    }
+
+    tbody tr:hover {
+        background: #F9FAFB;
+    }
+
+    tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    td {
+        padding: 16px 20px;
+        font-size: 14px;
+        color: #111827;
+    }
+
+    .distributor-name {
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .contact-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #6B7280;
+    }
+
+    .location-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: #F3F4F6;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #374151;
+        font-weight: 500;
+    }
+
+    /* Action Buttons */
+    .action-buttons-cell {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        position: relative;
+    }
+
+    .btn-icon i {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 15px;
+        line-height: 1;
+    }
+
+    .btn-view {
+        background: #F3F4F6;
+        color: #374151;
+    }
+
+    .btn-view:hover {
+        background: #E5E7EB;
+        color: #111827;
+        transform: translateY(-2px);
+    }
+
+    .btn-edit {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+
+    .btn-edit:hover {
+        background: #3B82F6;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-delete {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+
+    .btn-delete:hover {
+        background: #EF4444;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        color: #D1D5DB;
+        margin-bottom: 16px;
+    }
+
+    .empty-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .empty-text {
+        font-size: 14px;
+        color: #6B7280;
+        margin-bottom: 24px;
+    }
+
+    /* Pagination */
+    .pagination {
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #E5E7EB;
+    }
+
+    .pagination-info {
+        font-size: 14px;
+        color: #6B7280;
+    }
+
+    .pagination-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .page-btn {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #374151;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .page-btn:hover:not(:disabled) {
+        background: #F3F4F6;
+        border-color: #D1D5DB;
+    }
+
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .page-btn.active {
+        background: #FDB022;
+        color: #1F2937;
+        border-color: #FDB022;
+        font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-grid {
+            flex-direction: column;
+        }
+
+        .stat-card {
+            min-width: 100%;
+        }
+
+        .action-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-box {
+            max-width: 100%;
+        }
+
+        .table-container {
+            border-radius: 8px;
+        }
+
+        th, td {
+            padding: 12px 14px;
+            font-size: 13px;
+        }
+
+        .location-badge {
+            font-size: 12px;
+        }
+
+        .modal-content {
+            width: 95%;
+            max-height: 95vh;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .detail-row {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .detail-label {
+            width: 100%;
+        }
+    }
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-box {
+            max-width: 100%;
+        }
+
+        .table-container {
+            border-radius: 8px;
+        }
+
+        th, td {
+            padding: 12px 14px;
+            font-size: 13px;
+        }
+
+        .location-badge {
+            font-size: 12px;
+        }
+
+        .bottom-actions {
+            flex-direction: column;
+        }
+
+        .btn-add-large {
+            width: 100%;
+        }
+    
+
+    /* Bottom Actions */
+    .bottom-actions {
+        margin-top: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .btn-add-large {
+        padding: 14px 32px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        color: #1F2937;
+        box-shadow: 0 4px 12px rgba(253, 176, 34, 0.3);
+    }
+
+    .btn-add-large:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(253, 176, 34, 0.4);
+    }
+
+    .btn-add-large:active {
+        transform: translateY(-1px);
+    }
+
+    .btn-add-large i {
+        font-size: 16px;
+    }
+
+    /* Tooltip */
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    .tooltip .tooltip-text {
+        visibility: hidden;
+        width: 120px;
+        background-color: #1F2937;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 6px 8px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -60px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 12px;
+    }
+
+    .tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 0;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        padding: 24px 28px;
+        border-bottom: 1px solid #E5E7EB;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+    }
+
+    .modal-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1F2937;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .modal-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.1);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        color: #1F2937;
+        font-size: 18px;
+    }
+
+    .modal-close:hover {
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-body {
+        padding: 28px;
+        max-height: calc(90vh - 140px);
+        overflow-y: auto;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 16px 0;
+        border-bottom: 1px solid #F3F4F6;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        width: 140px;
+        flex-shrink: 0;
+    }
+
+    .detail-value {
+        font-size: 15px;
+        color: #111827;
+        font-weight: 500;
+        flex: 1;
+    }
+
+    .detail-value i {
+        margin-right: 8px;
+        color: #FDB022;
+    }
+
+    .modal-footer {
+        padding: 20px 28px;
+        border-top: 1px solid #E5E7EB;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .modal-footer .btn {
+        padding: 10px 24px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2>Manage Distributors</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Distributor Name</th>
-      <th>District</th>
-      <th>Province</th>
-      <th>Owner Name</th>
-      <th>Contact No</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for distributor in distributors %}
-      <tr>
-        <td>{{ distributor[1] }}</td>
-        <td>{{ distributor[2] }}</td>
-        <td>{{ distributor[3] }}</td>
-        <td>{{ distributor[4] }}</td>
-        <td>{{ distributor[5] }}</td>
-        <td>
-          <a href="{{ url_for('distributor_mgmt.update_distributor', distributor_id=distributor[0]) }}">Edit</a>
-          <a href="{{ url_for('distributor_mgmt.delete_distributor', distributor_id=distributor[0]) }}" onclick="return confirm('Are you sure you want to delete?')">Delete</a>
-        </td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-<a href="{{ url_for('distributor_mgmt.add_distributor') }}">Add New Distributor</a>
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total Distributors</div>
+            <div class="stat-value">{{ distributors|length if distributors else 0 }}</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Active</div>
+            <div class="stat-value">{{ distributors|length if distributors else 0 }}</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon info">
+            <i class="fas fa-map-marker-alt"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Districts</div>
+            <div class="stat-value">{{ distributors|map(attribute=2)|unique|list|length if distributors else 0 }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Bar -->
+<div class="action-bar">
+    <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search distributors by name, district, or contact...">
+    </div>
+    <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="exportTable()">
+            <i class="fas fa-download"></i>
+            <span>Export</span>
+        </button>
+        <button class="btn btn-secondary" onclick="window.print()">
+            <i class="fas fa-print"></i>
+            <span>Print</span>
+        </button>
+        <a href="{{ url_for('distributor_mgmt.add_distributor') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            <span>Add Distributor</span>
+        </a>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="table-container">
+    <div class="table-wrapper">
+        {% if distributors %}
+        <table id="distributorsTable">
+            <thead>
+                <tr>
+                    <th>Distributor Name</th>
+                    <th>Location</th>
+                    <th>Owner Name</th>
+                    <th>Contact</th>
+                    <th style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                {% for distributor in distributors %}
+                <tr>
+                    <td>
+                        <div class="distributor-name">{{ distributor[1] }}</div>
+                    </td>
+                    <td>
+                        <span class="location-badge">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ distributor[2] }}, {{ distributor[3] }}
+                        </span>
+                    </td>
+                    <td>{{ distributor[4] }}</td>
+                    <td>
+                        <div class="contact-info">
+                            <i class="fas fa-phone"></i>
+                            {{ distributor[5] }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons-cell" style="justify-content: center;">
+                            <a href="{{ url_for('distributor_mgmt.view_distributor', distributor_id=distributor[0]) }}" class="btn-icon btn-view tooltip">
+                                <i class="far fa-eye"></i>
+                                <span class="tooltip-text">View</span>
+                            </a>
+                            <a href="{{ url_for('distributor_mgmt.update_distributor', distributor_id=distributor[0]) }}" class="btn-icon btn-edit tooltip">
+                                <i class="fas fa-edit"></i>
+                                <span class="tooltip-text">Edit</span>
+                            </a>
+                            <button onclick="confirmDelete('{{ distributor[0] }}', '{{ distributor[1] }}')" class="btn-icon btn-delete tooltip">
+                                <i class="far fa-trash-alt"></i>
+                                <span class="tooltip-text">Delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="empty-title">No distributors found</div>
+            <div class="empty-text">Get started by adding your first distributor</div>
+            <a href="{{ url_for('distributor_mgmt.add_distributor') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                <span>Add First Distributor</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if distributors %}
+    <div class="pagination">
+        <div class="pagination-info">
+            Showing <strong id="visibleCount">{{ distributors|length }}</strong> of <strong>{{ distributors|length }}</strong> distributors
+        </div>
+        <div class="pagination-buttons">
+            <button class="page-btn" disabled>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn" disabled>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- View Details Modal -->
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <i class="fas fa-user-circle"></i>
+                Distributor Details
+            </h3>
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-row">
+                <div class="detail-label">Distributor Name</div>
+                <div class="detail-value" id="detail-name">
+                    <i class="fas fa-building"></i>
+                    <span></span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">District</div>
+                <div class="detail-value" id="detail-district">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span></span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Province</div>
+                <div class="detail-value" id="detail-province">
+                    <i class="fas fa-map"></i>
+                    <span></span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Owner Name</div>
+                <div class="detail-value" id="detail-owner">
+                    <i class="fas fa-user"></i>
+                    <span></span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Contact Number</div>
+                <div class="detail-value" id="detail-contact">
+                    <i class="fas fa-phone"></i>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            <a href="#" id="editDistributorBtn" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+                <span>Edit</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search Functionality
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#tableBody tr');
+        let visibleCount = 0;
+        
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const isVisible = text.includes(searchValue);
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
+        });
+
+        // Update visible count in pagination
+        const visibleCountElement = document.getElementById('visibleCount');
+        if (visibleCountElement) {
+            visibleCountElement.textContent = visibleCount;
+        }
+    });
+
+    // Delete Confirmation
+    function confirmDelete(distributorId, distributorName) {
+        if (confirm(`Are you sure you want to delete "${distributorName}"?\n\nThis action cannot be undone.`)) {
+            window.location.href = `/admin/delete_distributor/${distributorId}`;
+        }
+    }
+
+    // View Details Modal
+    function viewDetails(id, name, district, province, owner, contact) {
+        document.getElementById('detail-name').querySelector('span').textContent = name;
+        document.getElementById('detail-district').querySelector('span').textContent = district;
+        document.getElementById('detail-province').querySelector('span').textContent = province;
+        document.getElementById('detail-owner').querySelector('span').textContent = owner;
+        document.getElementById('detail-contact').querySelector('span').textContent = contact;
+        
+        // Update edit button link
+        document.getElementById('editDistributorBtn').href = `/admin/update_distributor/${id}`;
+        
+        // Show modal
+        document.getElementById('detailsModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        document.getElementById('detailsModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('detailsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    // Export to CSV
+    function exportTable() {
+        const table = document.getElementById('distributorsTable');
+        let csv = [];
+        
+        // Headers
+        const headers = Array.from(table.querySelectorAll('thead th'))
+            .slice(0, -1) // Exclude actions column
+            .map(th => th.textContent);
+        csv.push(headers.join(','));
+        
+        // Rows
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const cols = Array.from(row.querySelectorAll('td'))
+                    .slice(0, -1) // Exclude actions column
+                    .map(td => `"${td.textContent.trim().replace(/"/g, '""')}"`);
+                csv.push(cols.join(','));
+            }
+        });
+        
+        // Download
+        const csvContent = csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `distributors_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Auto-focus search on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add subtle animation to stat cards
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.4s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
 {% endblock %}

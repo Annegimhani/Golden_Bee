@@ -25,9 +25,25 @@ def manage_products():
     cur.close()
     return render_template('manage_products.html', products=products)
 
-
-
-
+# View single product details
+@product_mgmt_bp.route('/view_product/<int:product_id>', methods=['GET'])
+def view_product(product_id):
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cur.execute("""
+        SELECT p.product_id, p.product_name, c.category_name, p.unit_price, 
+               p.variant_size, p.shelf_life_days, p.product_image
+        FROM products p
+        JOIN category c ON p.category_id = c.category_id
+        WHERE p.product_id = %s
+    """, (product_id,))
+    product = cur.fetchone()
+    cur.close()
+    
+    if not product:
+        flash("Product not found", "error")
+        return redirect(url_for("product_mgmt.manage_products"))
+    
+    return render_template("view_product.html", product=product)
 
 @product_mgmt_bp.route('/add_product', methods=['GET', 'POST'])
 def add_product():

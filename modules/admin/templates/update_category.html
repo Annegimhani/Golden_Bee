@@ -1,16 +1,319 @@
 {% extends "base.html" %}
 
+{% block title %}Update Category - Golden Bee{% endblock %}
+{% block page_title %}Update Category{% endblock %}
+{% block breadcrumb %}Categories › Update{% endblock %}
+
+{% block topbar_actions %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E5E7EB;
+        overflow: hidden;
+    }
+
+    .form-header {
+        padding: 24px 32px;
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .form-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-header-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .form-body {
+        padding: 32px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    label .required {
+        color: #EF4444;
+        font-size: 16px;
+    }
+
+    label i {
+        color: #9CA3AF;
+        font-size: 14px;
+    }
+
+    input[type="text"],
+    textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        background: #F9FAFB;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+        outline: none;
+        border-color: #FDB022;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(253, 176, 34, 0.1);
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .helper-text {
+        font-size: 12px;
+        color: #6B7280;
+        margin-top: 6px;
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .helper-text i {
+        margin-top: 2px;
+        font-size: 12px;
+    }
+
+    .form-actions {
+        padding: 24px 32px;
+        background: #F9FAFB;
+        border-top: 1px solid #E5E7EB;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        color: #1F2937;
+        box-shadow: 0 2px 8px rgba(253, 176, 34, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(253, 176, 34, 0.4);
+    }
+
+    .btn-secondary {
+        background: #F3F4F6;
+        color: #374151;
+        border: 1px solid #E5E7EB;
+    }
+
+    .btn-secondary:hover {
+        background: #E5E7EB;
+    }
+
+    /* Info Box */
+    .info-box {
+        background: #EFF6FF;
+        border: 1px solid #DBEAFE;
+        border-left: 4px solid #3B82F6;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        gap: 12px;
+    }
+
+    .info-icon {
+        width: 24px;
+        height: 24px;
+        background: #3B82F6;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .info-content {
+        flex: 1;
+    }
+
+    .info-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1E40AF;
+        margin-bottom: 4px;
+    }
+
+    .info-text {
+        font-size: 13px;
+        color: #1E40AF;
+        line-height: 1.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-body {
+            padding: 24px;
+        }
+
+        .form-actions {
+            padding: 20px 24px;
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2>Update Category</h2>
-<form method="POST" enctype="multipart/form-data">
-  <div>
-    <label for="category_name">Category Name</label>
-    <input type="text" id="category_name" name="category_name" value="{{ category['category_name'] }}" required>
-  </div>
-  <div>
-    <label for="description">Description</label>
-    <textarea id="description" name="description">{{ category['description'] }}</textarea>
-  </div>
-  <button type="submit">Update Category</button>
-</form>
+<div class="form-container">
+    <form method="POST" enctype="multipart/form-data" class="form-card" id="categoryForm">
+        <!-- Form Header -->
+        <div class="form-header">
+            <h2>
+                <div class="form-header-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                Update Category
+            </h2>
+        </div>
+
+        <!-- Form Body -->
+        <div class="form-body">
+            <!-- Info Box -->
+            <div class="info-box">
+                <div class="info-icon">
+                    <i class="fas fa-info"></i>
+                </div>
+                <div class="info-content">
+                    <div class="info-title">Updating Category: {{ category['category_name'] }}</div>
+                    <div class="info-text">Make changes to the category information below and click "Update Category" to save.</div>
+                </div>
+            </div>
+
+            <!-- Category Name -->
+            <div class="form-group">
+                <label for="category_name">
+                    <i class="fas fa-tag"></i>
+                    Category Name
+                    <span class="required">*</span>
+                </label>
+                <input type="text" id="category_name" name="category_name" value="{{ category['category_name'] }}" required placeholder="e.g., Electronics, Clothing, Food">
+                <div class="helper-text">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Enter a clear and descriptive name for this category</span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label for="description">
+                    <i class="fas fa-align-left"></i>
+                    Description
+                </label>
+                <textarea id="description" name="description" placeholder="Enter a brief description of this category (optional)">{{ category['description'] if category['description'] else '' }}</textarea>
+                <div class="helper-text">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Provide details about what products belong in this category</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <a href="{{ url_for('category_mgmt.manage_categories') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to List
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check"></i>
+                Update Category
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    const form = document.getElementById('categoryForm');
+    form.addEventListener('submit', function(e) {
+        const categoryName = document.getElementById('category_name');
+        
+        if (!categoryName.value.trim()) {
+            e.preventDefault();
+            categoryName.style.borderColor = '#EF4444';
+            alert('Please enter a category name');
+            categoryName.focus();
+            return false;
+        }
+    });
+
+    // Reset border color on input
+    document.getElementById('category_name').addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.style.borderColor = '#E5E7EB';
+        }
+    });
+</script>
 {% endblock %}

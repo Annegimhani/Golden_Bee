@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Order - Golden Bee</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .order-form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .form-label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Place New Order</h2>
+            <a href="{{ url_for('distributor_order_bp.manage_orders') }}" class="btn btn-outline-secondary">
+                ← Back to Orders
+            </a>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="order-form">
+            <form method="POST" action="{{ url_for('distributor_order_bp.add_order') }}">
+                <!-- Category Dropdown -->
+                <div class="mb-3">
+                    <label for="category_id" class="form-label">Category *</label>
+                    <select class="form-select" name="category_id" id="category_id" required onchange="fetchProducts()">
+                        <option value="">-- Select Category --</option>
+                        {% for category in categories %}
+                            <option value="{{ category.category_id }}">
+                                {{ category.category_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Product Dropdown -->
+                <div class="mb-3">
+                    <label for="product_id" class="form-label">Product *</label>
+                    <select class="form-select" name="product_id" id="product_id" required disabled>
+                        <option value="">-- Select Product --</option>
+                    </select>
+                </div>
+
+                <!-- Unit Price (Auto-filled) -->
+                <div class="mb-3">
+                    <label for="unit_price" class="form-label">Unit Price</label>
+                    <input type="text" class="form-control" id="unit_price" name="unit_price" readonly>
+                    <small class="text-muted">Price will be auto-filled when you select a product</small>
+                </div>
+
+                <!-- Variant Size -->
+                <div class="mb-3">
+                    <label for="variant_size" class="form-label">Size/Variant (Optional)</label>
+                    <input type="text" class="form-control" id="variant_size" name="variant_size" 
+                           placeholder="e.g., Large, 500ml, Red">
+                </div>
+
+                <!-- Quantity -->
+                <div class="mb-3">
+                    <label for="quantity" class="form-label">Quantity *</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity" 
+                           value="1" min="1" required oninput="calculateTotal()">
+                </div>
+
+                <!-- Subtotal Display -->
+                <div class="mb-3">
+                    <label class="form-label">Subtotal</label>
+                    <div class="form-control bg-light" id="subtotal_display">$0.00</div>
+                    <input type="hidden" id="subtotal" name="subtotal">
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">Place Order Request</button>
+                    <a href="{{ url_for('distributor_order_bp.manage_orders') }}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Function to fetch products based on the selected category
+        function fetchProducts() {
+            var category_id = document.getElementById('category_id').value;
+            if (!category_id) {
+                document.getElementById('product_id').disabled = true;
+                document.getElementById('product_id').innerHTML = '<option value="">-- Select Product --</option>';
+                document.getElementById('unit_price').value = '';
+                calculateTotal();
+                return;
+            }
+            
+            // Use the correct URL from your Flask routes
+            fetch('{{ url_for("distributor_order_bp.get_products", category_id="") }}' + category_id)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    var productSelect = document.getElementById('product_id');
+                    productSelect.innerHTML = '<option value="">-- Select Product --</option>';
+                    
+                    data.products.forEach(function(product) {
+                        var option = document.createElement('option');
+                        option.value = product.product_id;
+                        option.textContent = product.product_name;
+                        option.dataset.price = product.unit_price;
+                        productSelect.appendChild(option);
+                    });
+                    
+                    productSelect.disabled = false;
+                    productSelect.value = '';
+                    document.getElementById('unit_price').value = '';
+                    calculateTotal();
+                })
+                .catch(err => {
+                    console.log("Error fetching products:", err);
+                    alert('Error loading products. Please try again.');
+                });
+        }
+        
+        // When product selection changes, update the unit price
+        document.getElementById('product_id').addEventListener('change', function() {
+            var selectedOption = this.options[this.selectedIndex];
+            var price = selectedOption.dataset.price || 0;
+            document.getElementById('unit_price').value = '$' + parseFloat(price).toFixed(2);
+            calculateTotal();
+        });
+        
+        // Calculate total price
+        function calculateTotal() {
+            var productSelect = document.getElementById('product_id');
+            var quantity = document.getElementById('quantity').value || 0;
+            var price = 0;
+            
+            if (productSelect.selectedIndex > 0) {
+                price = productSelect.options[productSelect.selectedIndex].dataset.price || 0;
+            }
+            
+            var subtotal = parseFloat(price) * parseInt(quantity);
+            document.getElementById('subtotal_display').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('subtotal').value = subtotal.toFixed(2);
+        }
+        
+        // Initialize calculation on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateTotal();
+        });
+    </script>
+</body>
+</html>

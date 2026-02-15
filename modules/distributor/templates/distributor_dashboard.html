@@ -1,15 +1,372 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributor Dashboard - Golden Bee</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block content %}
-<div class="card">
-  <h2>Distributor Dashboard</h2>
-  <p>Welcome, <b>{{ username }}</b></p>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-  <div class="grid">
-    <a class="tile" href="#">View Orders</a>
-    <a class="tile" href="#">Manage Stock</a>
-    <a class="tile" href="#">Request Inventory</a>
-    <a class="tile" href="{{ url_for('distributor.distributor_logout') }}">Logout</a>
-  </div>
-</div>
-{% endblock %}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header .welcome {
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .dashboard-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .card-icon.orders {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .card-icon.stock {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .card-icon.products {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .card-icon.profile {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: white;
+        }
+
+        .dashboard-card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .stats-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .stats-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .quick-actions {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .quick-actions h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            border-radius: 50px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(245, 87, 108, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>🍯 Golden Bee Distributor Portal</h1>
+            <p class="welcome">Welcome back, <strong>{{ username }}</strong>!</p>
+        </div>
+
+        <!-- Main Dashboard Cards -->
+        <div class="dashboard-grid">
+            <!-- Manage Orders Card -->
+            <a href="{{ url_for('distributor_order_bp.manage_orders') }}" class="dashboard-card">
+                <div class="card-icon orders">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h3 class="card-title">Manage Orders</h3>
+                <p class="card-description">View, track, and manage all your orders in one place</p>
+            </a>
+
+            <!-- My Stock Card -->
+            <a href="{{ url_for('distributor_stock_bp.my_stock') }}" class="dashboard-card">
+                <div class="card-icon stock">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <h3 class="card-title">My Stock</h3>
+                <p class="card-description">Monitor your inventory and stock levels</p>
+            </a>
+
+            <!-- Browse Products Card -->
+            <a href="{{ url_for('distributor_bp.browse_products') }}" class="dashboard-card">
+                <div class="card-icon products">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h3 class="card-title">Browse Products</h3>
+                <p class="card-description">Explore and order from our product catalog</p>
+            </a>
+
+            <!-- Profile Card -->
+            <a href="{{ url_for('distributor_bp.dashboard') }}" class="dashboard-card">
+                <div class="card-icon profile">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h3 class="card-title">My Profile</h3>
+                <p class="card-description">View and update your account information</p>
+            </a>
+        </div>
+
+        <!-- Quick Stats Section -->
+        <div class="stats-section">
+            <h2><i class="fas fa-chart-line"></i> Quick Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-label">Pending Orders</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-label">Completed Orders</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="stat-label">Stock Items</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-label">Total Value</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+            <div class="action-buttons">
+                <a href="{{ url_for('distributor_bp.browse_products') }}" class="action-btn">
+                    <i class="fas fa-plus-circle"></i>
+                    Place New Order
+                </a>
+                <a href="{{ url_for('distributor_order_bp.manage_orders') }}" class="action-btn">
+                    <i class="fas fa-list"></i>
+                    View All Orders
+                </a>
+                <a href="{{ url_for('distributor_stock_bp.my_stock') }}" class="action-btn">
+                    <i class="fas fa-warehouse"></i>
+                    Check Stock Levels
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Button -->
+    <a href="{{ url_for('distributor_bp.logout') }}" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</body>
+</html>

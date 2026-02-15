@@ -1,0 +1,532 @@
+{% extends "base.html" %}
+
+{% block title %}Distributor Details - Golden Bee{% endblock %}
+{% block page_title %}Distributor Details{% endblock %}
+{% block breadcrumb %}Distributors › View Details{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('distributor_mgmt.manage_distributors') }}" class="btn btn-secondary" style="margin-right: 12px;">
+    <i class="fas fa-arrow-left"></i>
+    <span>Back to List</span>
+</a>
+<a href="{{ url_for('distributor_mgmt.update_distributor', distributor_id=distributor[0]) }}" class="btn btn-primary">
+    <i class="fas fa-edit"></i>
+    <span>Edit Distributor</span>
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .details-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Profile Header Card */
+    .profile-header {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E5E7EB;
+        padding: 32px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 28px;
+    }
+
+    .profile-image-container {
+        flex-shrink: 0;
+        position: relative;
+    }
+
+    .profile-image {
+        width: 140px;
+        height: 140px;
+        border-radius: 16px;
+        object-fit: cover;
+        border: 4px solid #F3F4F6;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        display: block;
+    }
+
+    .profile-image.hidden {
+        display: none;
+    }
+
+    .profile-image-placeholder {
+        width: 140px;
+        height: 140px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 56px;
+        font-weight: 700;
+        color: #1F2937;
+        border: 4px solid #F3F4F6;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-info {
+        flex: 1;
+    }
+
+    .profile-name {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .profile-meta {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #6B7280;
+        font-size: 14px;
+    }
+
+    .meta-item i {
+        color: #FDB022;
+        font-size: 16px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .status-badge.active {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+
+    .status-badge i {
+        font-size: 10px;
+    }
+
+    .profile-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    /* Details Grid */
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .detail-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        padding: 24px;
+    }
+
+    .card-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-title i {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #1F2937;
+    }
+
+    .detail-item {
+        display: flex;
+        padding: 14px 0;
+        border-bottom: 1px solid #F3F4F6;
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        width: 140px;
+        flex-shrink: 0;
+    }
+
+    .detail-value {
+        font-size: 15px;
+        color: #111827;
+        font-weight: 500;
+        flex: 1;
+        word-break: break-word;
+    }
+
+    .detail-value.email {
+        color: #3B82F6;
+        text-decoration: none;
+    }
+
+    .detail-value.email:hover {
+        text-decoration: underline;
+    }
+
+    /* Action Buttons */
+    .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        color: #1F2937;
+        box-shadow: 0 2px 8px rgba(253, 176, 34, 0.2);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(253, 176, 34, 0.3);
+    }
+
+    .btn-secondary {
+        background: #F3F4F6;
+        color: #374151;
+        border: 1px solid #E5E7EB;
+    }
+
+    .btn-secondary:hover {
+        background: #E5E7EB;
+    }
+
+    /* Empty State */
+    .empty-state {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .empty-icon {
+        font-size: 64px;
+        color: #D1D5DB;
+        margin-bottom: 16px;
+    }
+
+    .empty-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .empty-text {
+        font-size: 14px;
+        color: #6B7280;
+        margin-bottom: 24px;
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .profile-meta {
+            justify-content: center;
+        }
+
+        .profile-actions {
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .profile-image,
+        .profile-image-placeholder {
+            width: 100px;
+            height: 100px;
+            font-size: 40px;
+        }
+
+        .profile-name {
+            font-size: 22px;
+        }
+
+        .detail-item {
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .detail-label {
+            width: 100%;
+        }
+
+        .detail-card {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="details-container">
+    {% if distributor %}
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-image-container">
+            {% if distributor[9] %}
+                <img src="/static/{{ distributor[9] }}" 
+                     alt="{{ distributor[1] }}" 
+                     class="profile-image"
+                     onerror="this.classList.add('hidden'); this.nextElementSibling.style.display='flex';"
+                     onload="this.nextElementSibling.style.display='none';">
+                <div class="profile-image-placeholder" style="display: flex;">
+                    {{ distributor[1][0].upper() }}
+                </div>
+            {% else %}
+                <div class="profile-image-placeholder">
+                    {{ distributor[1][0].upper() }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="profile-info">
+            <h1 class="profile-name">{{ distributor[1] }}</h1>
+            <div class="profile-meta">
+                <div class="meta-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ distributor[2] }}, {{ distributor[3] }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-phone"></i>
+                    <span>{{ distributor[5] }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>{{ distributor[7] }}</span>
+                </div>
+            </div>
+            <div>
+                <span class="status-badge active">
+                    <i class="fas fa-circle"></i>
+                    Active
+                </span>
+            </div>
+            <div class="profile-actions">
+                <a href="{{ url_for('distributor_mgmt.update_distributor', distributor_id=distributor[0]) }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit Details</span>
+                </a>
+                <a href="{{ url_for('distributor_mgmt.manage_distributors') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to List</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="details-grid">
+        <!-- Business Information -->
+        <div class="detail-card">
+            <h2 class="card-title">
+                <i class="fas fa-building"></i>
+                Business Information
+            </h2>
+            <div class="detail-item">
+                <div class="detail-label">Business Name</div>
+                <div class="detail-value">{{ distributor[1] }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Owner Name</div>
+                <div class="detail-value">{{ distributor[4] }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Distributor ID</div>
+                <div class="detail-value">#{{ distributor[0] }}</div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="detail-card">
+            <h2 class="card-title">
+                <i class="fas fa-address-card"></i>
+                Contact Information
+            </h2>
+            <div class="detail-item">
+                <div class="detail-label">Phone Number</div>
+                <div class="detail-value">
+                    <a href="tel:{{ distributor[5] }}" style="color: #111827; text-decoration: none;">
+                        {{ distributor[5] }}
+                    </a>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">
+                    <a href="mailto:{{ distributor[7] }}" class="email">
+                        {{ distributor[7] }}
+                    </a>
+                </div>
+            </div>
+            {% if distributor[6] %}
+            <div class="detail-item">
+                <div class="detail-label">Address</div>
+                <div class="detail-value">{{ distributor[6] }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Location Information -->
+        <div class="detail-card">
+            <h2 class="card-title">
+                <i class="fas fa-map"></i>
+                Location Information
+            </h2>
+            <div class="detail-item">
+                <div class="detail-label">District</div>
+                <div class="detail-value">{{ distributor[2] }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Province</div>
+                <div class="detail-value">{{ distributor[3] }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Region</div>
+                <div class="detail-value">{{ distributor[3] }} Region</div>
+            </div>
+        </div>
+
+        <!-- Account Status -->
+        <div class="detail-card">
+            <h2 class="card-title">
+                <i class="fas fa-info-circle"></i>
+                Account Status
+            </h2>
+            <div class="detail-item">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">
+                    <span class="status-badge active">
+                        <i class="fas fa-circle"></i>
+                        Active
+                    </span>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Account Type</div>
+                <div class="detail-value">Distributor</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Joined Date</div>
+                <div class="detail-value">Recently Added</div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Not Found State -->
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-user-slash"></i>
+        </div>
+        <div class="empty-title">Distributor Not Found</div>
+        <div class="empty-text">The distributor you're looking for doesn't exist or has been removed.</div>
+        <a href="{{ url_for('distributor_mgmt.manage_distributors') }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Distributors</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle distributor image loading with fallback paths
+    document.addEventListener('DOMContentLoaded', function() {
+        const img = document.querySelector('.profile-image');
+        const placeholder = document.querySelector('.profile-image-placeholder');
+        
+        if (img && placeholder) {
+            const imagePath = '{{ distributor[9] if distributor[9] else "" }}';
+            
+            if (imagePath) {
+                // Try multiple paths
+                const pathsToTry = [
+                    '/static/' + imagePath,
+                    '/' + imagePath,
+                    imagePath
+                ];
+                
+                let currentIndex = 0;
+                
+                function tryNextPath() {
+                    if (currentIndex < pathsToTry.length) {
+                        img.src = pathsToTry[currentIndex];
+                        currentIndex++;
+                    } else {
+                        // All paths failed, show placeholder
+                        img.classList.add('hidden');
+                        placeholder.style.display = 'flex';
+                    }
+                }
+                
+                img.onerror = tryNextPath;
+                img.onload = function() {
+                    placeholder.style.display = 'none';
+                    img.classList.remove('hidden');
+                };
+                
+                // Start with first path
+                img.src = pathsToTry[0];
+            } else {
+                // No image path, show placeholder
+                if (img) img.classList.add('hidden');
+                placeholder.style.display = 'flex';
+            }
+        }
+    });
+</script>
+{% endblock %}

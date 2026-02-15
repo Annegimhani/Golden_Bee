@@ -24,6 +24,20 @@ def manage_distributors():
     cur.close()
     return render_template("manage_distributors.html", distributors=distributors)
 
+# View single distributor details
+@distributor_mgmt_bp.route("/view_distributor/<int:distributor_id>", methods=["GET"])
+def view_distributor(distributor_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM distributor WHERE distributor_id = %s", (distributor_id,))
+    distributor = cur.fetchone()
+    cur.close()
+    
+    if not distributor:
+        flash("Distributor not found", "error")
+        return redirect(url_for("distributor_mgmt.manage_distributors"))
+    
+    return render_template("view_distributor.html", distributor=distributor)
+
 # Add distributor route
 @distributor_mgmt_bp.route("/add_distributor", methods=["GET", "POST"])
 def add_distributor():
@@ -40,7 +54,7 @@ def add_distributor():
         # Validate required fields
         if not all([distributor_name, district, province, owner_name, contact_no, email, password]):
             flash("All fields except address are required.", "error")
-            return redirect(url_for("distributor_mgmt_routes.add_distributor"))
+            return redirect(url_for("distributor_mgmt.add_distributor"))
         
         # Hash the password
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
@@ -69,7 +83,7 @@ def add_distributor():
             )
             mysql.connection.commit()
             flash("Distributor added successfully", "success")
-            return redirect(url_for("distributor_mgmt_routes.manage_distributors"))
+            return redirect(url_for("distributor_mgmt.manage_distributors"))
         except Exception as e:
             mysql.connection.rollback()
             flash(f"Error adding distributor: {str(e)}", "error")
@@ -88,7 +102,7 @@ def update_distributor(distributor_id):
 
     if not distributor:
         flash("Distributor not found", "error")
-        return redirect(url_for("distributor_mgmt_routes.manage_distributors"))
+        return redirect(url_for("distributor_mgmt.manage_distributors"))
 
     if request.method == "POST":
         distributor_name = request.form.get("distributor_name", "").strip()
@@ -133,7 +147,7 @@ def update_distributor(distributor_id):
             )
             mysql.connection.commit()
             flash("Distributor updated successfully", "success")
-            return redirect(url_for("distributor_mgmt_routes.manage_distributors"))
+            return redirect(url_for("distributor_mgmt.manage_distributors"))
         except Exception as e:
             mysql.connection.rollback()
             flash(f"Error updating distributor: {str(e)}", "error")
@@ -156,4 +170,4 @@ def delete_distributor(distributor_id):
     finally:
         cur.close()
 
-    return redirect(url_for("distributor_mgmt_routes.manage_distributors"))
+    return redirect(url_for("distributor_mgmt.manage_distributors"))
