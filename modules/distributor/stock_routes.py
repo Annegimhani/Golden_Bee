@@ -33,6 +33,7 @@ def get_distributor_stock(distributor_id):
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
     try:
+        # Join with stock table to get product and category info
         query = """
             SELECT 
                 ds.stock_id,
@@ -42,12 +43,12 @@ def get_distributor_stock(distributor_id):
                 ds.quantity,
                 ds.unit_price,
                 ds.last_updated,
-                p.product_name,
-                p.category_name,
-                p.product_image,
+                COALESCE(s.product_name, 'Unknown Product') as product_name,
+                COALESCE(s.category_name, 'Uncategorized') as category_name,
                 (ds.quantity * ds.unit_price) as total_value
             FROM distributor_stock ds
-            INNER JOIN products p ON ds.product_id = p.product_id
+            LEFT JOIN stock s ON ds.product_id = s.product_id 
+                AND ds.variant_size = s.variant_size
             WHERE ds.distributor_id = %s
             ORDER BY ds.last_updated DESC
         """
@@ -60,20 +61,29 @@ def get_distributor_stock(distributor_id):
         
         # Format dates
         for item in stock_items:
-            print(f"DEBUG: Processing item: {item.get('product_name')}")
+            print(f"DEBUG: Item - ID: {item.get('stock_id')}, Product: {item.get('product_name')}, Qty: {item.get('quantity')}")
             
             if item.get('last_updated'):
                 if isinstance(item['last_updated'], datetime):
                     item['formatted_date'] = item['last_updated'].strftime('%d/%m/%Y %H:%M')
                 else:
-                    item['formatted_date'] = str(item['last_updated'])
+                    try:
+                        dt = datetime.strptime(str(item['last_updated']), '%Y-%m-%d %H:%M:%S')
+                        item['formatted_date'] = dt.strftime('%d/%m/%Y %H:%M')
+                    except:
+                        item['formatted_date'] = str(item['last_updated'])
             else:
                 item['formatted_date'] = 'N/A'
             
             # Ensure variant_size is not None
             if not item.get('variant_size'):
                 item['variant_size'] = ''
+            
+            # Ensure total_value is calculated
+            if item.get('total_value') is None:
+                item['total_value'] = float(item.get('quantity', 0)) * float(item.get('unit_price', 0))
                 
+        print(f"DEBUG: Returning {len(stock_items)} items to template")
         return stock_items
         
     except Exception as e:
@@ -182,12 +192,15 @@ def get_stock_stats(distributor_id):
         stats = cur.fetchone()
         low_stock = stats['low_stock_count'] if stats else 0
         
-        return {
+        result = {
             'total_products': total_products,
             'total_quantity': total_quantity,
             'total_value': float(total_value),
             'low_stock_count': low_stock
         }
+        
+        print(f"DEBUG: Stats calculated: {result}")
+        return result
         
     except Exception as e:
         print(f"Error getting stock stats: {str(e)}")
@@ -212,7 +225,12 @@ def my_stock():
         return redirect('/distributor/login')
     
     distributor_id = session.get('distributor_id')
+    distributor_name = session.get('distributor_name', 'Distributor')
+    
+    print(f"DEBUG: ========================================")
+    print(f"DEBUG: Loading My Stock page")
     print(f"DEBUG: Logged in distributor_id: {distributor_id}")
+    print(f"DEBUG: Distributor name: {distributor_name}")
     
     # Get stock items
     stock_items = get_distributor_stock(distributor_id)
@@ -221,11 +239,12 @@ def my_stock():
     # Get statistics
     stats = get_stock_stats(distributor_id)
     print(f"DEBUG: Stats: {stats}")
+    print(f"DEBUG: ========================================")
     
     return render_template('distributor_my_stock.html',
                           stock_items=stock_items,
                           stats=stats,
-                          username=session.get('distributor_name'))
+                          username=distributor_name)
 
 @distributor_stock_bp.route('/stock_details/<int:stock_id>')
 def stock_details(stock_id):
@@ -242,11 +261,10 @@ def stock_details(stock_id):
             SELECT 
                 ds.*,
                 p.product_name,
-                p.category_name,
                 p.product_image,
                 p.description
             FROM distributor_stock ds
-            INNER JOIN products p ON ds.product_id = p.product_id
+            LEFT JOIN products p ON ds.product_id = p.product_id
             WHERE ds.stock_id = %s AND ds.distributor_id = %s
         """, (stock_id, distributor_id))
         

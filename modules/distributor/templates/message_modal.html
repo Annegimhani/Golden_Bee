@@ -1,0 +1,473 @@
+<!-- ========================================
+     PROFESSIONAL MESSAGE VIEWER MODAL
+     View-Only - Displays Admin Messages
+     ======================================== -->
+
+<div id="messageModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; animation: fadeInModal 0.3s ease;">
+    <div style="background: white; border-radius: 16px; max-width: 700px; width: 90%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: slideInModal 0.3s ease;">
+        
+        <!-- Modal Header -->
+        <div style="padding: 24px; border-bottom: 2px solid #F3F4F6; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div>
+                <h3 style="margin: 0; font-size: 22px; font-weight: 700; color: white; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-envelope-open-text"></i> Order Messages
+                </h3>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: rgba(255,255,255,0.9);">View admin responses for this order</p>
+            </div>
+            <button onclick="closeMessageModal()" style="background: rgba(255,255,255,0.2); border: none; font-size: 20px; color: white; cursor: pointer; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s; backdrop-filter: blur(10px);">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Order Info Banner -->
+        <div style="padding: 16px 24px; background: linear-gradient(to right, #F9FAFB, #FFFFFF); border-bottom: 1px solid #E5E7EB;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #FDB022, #FFD54F); border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(253, 176, 34, 0.3);">
+                    <i class="fas fa-shopping-bag" style="color: #1F2937; font-size: 18px;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 2px;">Order Details</div>
+                    <div style="font-weight: 700; color: #111827; font-size: 15px;" id="modalOrderInfo"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Messages Container -->
+        <div id="messagesContainer" style="flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; min-height: 300px; max-height: 450px; background: #FAFBFC;">
+            <!-- Loading State -->
+            <div id="loadingState" style="text-align: center; color: #6B7280; padding: 60px 20px;">
+                <div style="margin-bottom: 20px;">
+                    <div class="spinner"></div>
+                </div>
+                <p style="font-size: 16px; font-weight: 500; margin: 0;">Loading messages...</p>
+                <p style="font-size: 13px; color: #9CA3AF; margin: 8px 0 0 0;">Please wait</p>
+            </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div style="padding: 20px 24px; border-top: 2px solid #F3F4F6; background: white; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 12px; color: #6B7280; display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-info-circle"></i>
+                <span>Messages are automatically marked as read</span>
+            </div>
+            <button onclick="closeMessageModal()" 
+                    style="padding: 12px 28px; border-radius: 10px; font-weight: 600; cursor: pointer; border: 2px solid #E5E7EB; background: white; color: #374151; font-size: 14px; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-times-circle"></i> Close
+            </button>
+        </div>
+        
+    </div>
+</div>
+
+<style>
+/* Modal Animations */
+@keyframes fadeInModal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInModal {
+    from { 
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px);
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0);
+    }
+}
+
+/* Loading Spinner */
+.spinner {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto;
+    border: 4px solid #F3F4F6;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Message Card Styles */
+.message-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    animation: fadeIn 0.4s ease;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.message-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    transition: width 0.3s ease;
+}
+
+.message-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.message-card.accepted::before {
+    background: linear-gradient(180deg, #10B981, #34D399);
+}
+
+.message-card.rejected::before {
+    background: linear-gradient(180deg, #EF4444, #F87171);
+}
+
+.message-card.info::before {
+    background: linear-gradient(180deg, #3B82F6, #60A5FA);
+}
+
+.message-card:hover::before {
+    width: 6px;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.badge-accepted {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+    color: #065F46;
+    border: 1px solid #6EE7B7;
+}
+
+.badge-rejected {
+    background: linear-gradient(135deg, #FEE2E2, #FECACA);
+    color: #991B1B;
+    border: 1px solid #FCA5A5;
+}
+
+.badge-info {
+    background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+    color: #1E40AF;
+    border: 1px solid #93C5FD;
+}
+
+/* Message Content */
+.message-content {
+    font-size: 15px;
+    color: #1F2937;
+    line-height: 1.7;
+    margin: 16px 0;
+}
+
+.message-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid #F3F4F6;
+    font-size: 12px;
+    color: #6B7280;
+}
+
+.message-from {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.message-time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #F3F4F6, #E5E7EB);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #9CA3AF;
+}
+
+.empty-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.empty-text {
+    font-size: 14px;
+    color: #6B7280;
+    line-height: 1.6;
+}
+
+/* Scrollbar Styling */
+#messagesContainer::-webkit-scrollbar {
+    width: 8px;
+}
+
+#messagesContainer::-webkit-scrollbar-track {
+    background: #F3F4F6;
+    border-radius: 4px;
+}
+
+#messagesContainer::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #D1D5DB, #9CA3AF);
+    border-radius: 4px;
+}
+
+#messagesContainer::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #9CA3AF, #6B7280);
+}
+
+/* Close Button Hover */
+button[onclick="closeMessageModal()"]:hover {
+    background: #F9FAFB !important;
+    border-color: #D1D5DB !important;
+    transform: scale(1.02);
+}
+
+/* Modal Close Button (Header) Hover */
+.modal-close-btn:hover {
+    background: rgba(255,255,255,0.3) !important;
+    transform: rotate(90deg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #messageModal > div {
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    .message-card {
+        padding: 16px;
+    }
+    
+    .message-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+</style>
+
+<script>
+// ========================================
+// MESSAGE MODAL JAVASCRIPT
+// ========================================
+
+let currentOrderId = null;
+
+// Open message modal
+function openMessageModal(orderId, orderInfo) {
+    // Convert to number
+    orderId = parseInt(orderId);
+    
+    currentOrderId = orderId;
+    document.getElementById('modalOrderInfo').textContent = '#' + orderId + ' - ' + orderInfo;
+    document.getElementById('messageModal').style.display = 'flex';
+    
+    // Reset container
+    const container = document.getElementById('messagesContainer');
+    container.innerHTML = `
+        <div id="loadingState" style="text-align: center; color: #6B7280; padding: 60px 20px;">
+            <div style="margin-bottom: 20px;">
+                <div class="spinner"></div>
+            </div>
+            <p style="font-size: 16px; font-weight: 500; margin: 0;">Loading messages...</p>
+            <p style="font-size: 13px; color: #9CA3AF; margin: 8px 0 0 0;">Please wait</p>
+        </div>
+    `;
+    
+    // Load messages
+    loadMessages(orderId);
+    
+    // Mark as read and update badge
+    markMessagesAsRead(orderId);
+    setTimeout(() => {
+        if (typeof loadUnreadCount === 'function') {
+            loadUnreadCount();
+        }
+    }, 500);
+}
+
+// Close message modal
+function closeMessageModal() {
+    document.getElementById('messageModal').style.display = 'none';
+    currentOrderId = null;
+}
+
+// Load messages from database
+function loadMessages(orderId) {
+    const container = document.getElementById('messagesContainer');
+    
+    fetch(`/distributor/get_messages/${orderId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.messages && data.messages.length > 0) {
+                container.innerHTML = '';
+                data.messages.forEach(msg => {
+                    container.appendChild(createMessageCard(msg));
+                });
+                // Scroll to bottom
+                container.scrollTop = container.scrollHeight;
+            } else {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-comment-slash"></i>
+                        </div>
+                        <div class="empty-title">No Messages Yet</div>
+                        <div class="empty-text">
+                            The admin hasn't sent any messages for this order yet.<br>
+                            Messages will appear here when admin accepts or rejects your order.
+                        </div>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading messages:', error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon" style="background: linear-gradient(135deg, #FEE2E2, #FECACA);">
+                        <i class="fas fa-exclamation-triangle" style="color: #EF4444;"></i>
+                    </div>
+                    <div class="empty-title" style="color: #991B1B;">Error Loading Messages</div>
+                    <div class="empty-text">
+                        Unable to load messages. Please try again later.
+                    </div>
+                </div>
+            `;
+        });
+}
+
+// Create message card element
+function createMessageCard(msg) {
+    const card = document.createElement('div');
+    
+    // Determine message type styling
+    let statusClass = 'info';
+    let badgeClass = 'badge-info';
+    let icon = '<i class="fas fa-info-circle"></i>';
+    let statusText = 'MESSAGE';
+    
+    if (msg.message_type === 'accept') {
+        statusClass = 'accepted';
+        badgeClass = 'badge-accepted';
+        icon = '<i class="fas fa-check-circle"></i>';
+        statusText = 'ORDER ACCEPTED';
+    } else if (msg.message_type === 'reject') {
+        statusClass = 'rejected';
+        badgeClass = 'badge-rejected';
+        icon = '<i class="fas fa-times-circle"></i>';
+        statusText = 'ORDER REJECTED';
+    }
+    
+    card.className = `message-card ${statusClass}`;
+    
+    // Format timestamp
+    const time = new Date(msg.created_at).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    card.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+            <div class="status-badge ${badgeClass}">
+                ${icon}
+                <span>${statusText}</span>
+            </div>
+            <div class="message-time">
+                <i class="far fa-clock"></i>
+                <span>${time}</span>
+            </div>
+        </div>
+        
+        <div class="message-content">
+            ${msg.message}
+        </div>
+        
+        <div class="message-meta">
+            <div class="message-from">
+                <i class="fas fa-user-shield"></i>
+                <span>Admin</span>
+            </div>
+            <div style="font-size: 11px; color: #9CA3AF;">
+                Message ID: #${msg.message_id}
+            </div>
+        </div>
+    `;
+    
+    return card;
+}
+
+// Mark messages as read
+function markMessagesAsRead(orderId) {
+    fetch(`/distributor/mark_messages_read/${orderId}`, {
+        method: 'POST'
+    }).catch(error => console.error('Error marking messages as read:', error));
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('messageModal');
+    if (modal && e.target === modal) {
+        closeMessageModal();
+    }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && currentOrderId) {
+        closeMessageModal();
+    }
+});
+</script>

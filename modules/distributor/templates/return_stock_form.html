@@ -1,0 +1,525 @@
+{% extends 'distributor_base.html' %}
+{% block title %}New Return Request - Golden Bee{% endblock %}
+{% block page_title %}New Return Request{% endblock %}
+{% block breadcrumb %}Inventory / Return Stock / New Request{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── ALL scoped to .rsf-wrap — no leakage ── */
+
+    .rsf-wrap .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #6B7280;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: color 0.2s;
+    }
+    .rsf-wrap .back-link:hover { color: #111827; text-decoration: none; }
+
+    /* Layout */
+    .rsf-wrap .form-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 24px;
+        align-items: start;
+    }
+
+    /* Card */
+    .rsf-wrap .card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .rsf-wrap .card-header {
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid #F3F4F6;
+        background: #FAFAFA;
+    }
+
+    .rsf-wrap .card-header-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+        background: #FEF3C7;
+        color: #D97706;
+    }
+
+    .rsf-wrap .card-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0;
+    }
+
+    .rsf-wrap .card-header p {
+        font-size: 13px;
+        color: #6B7280;
+        margin: 2px 0 0;
+    }
+
+    .rsf-wrap .card-body {
+        padding: 24px;
+    }
+
+    /* Form Fields */
+    .rsf-wrap .form-group {
+        margin-bottom: 20px;
+    }
+
+    .rsf-wrap .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .rsf-wrap .form-group select,
+    .rsf-wrap .form-group input[type="number"],
+    .rsf-wrap .form-group input[type="text"],
+    .rsf-wrap .form-group textarea {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        color: #111827;
+        background: #FAFAFA;
+        outline: none;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .rsf-wrap .form-group select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 13px center;
+        background-color: #FAFAFA;
+        padding-right: 36px;
+    }
+
+    .rsf-wrap .form-group select:focus,
+    .rsf-wrap .form-group input:focus,
+    .rsf-wrap .form-group textarea:focus {
+        border-color: #FDB022;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(253,176,34,0.1);
+    }
+
+    .rsf-wrap .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+        line-height: 1.6;
+    }
+
+    /* Stock Info Strip */
+    .rsf-wrap .stock-strip {
+        display: none;
+        background: #1F2937;
+        border-radius: 10px;
+        padding: 14px 20px;
+        margin-bottom: 20px;
+        align-items: center;
+        justify-content: space-around;
+    }
+    .rsf-wrap .stock-strip.show { display: flex; }
+
+    .rsf-wrap .strip-stat { text-align: center; }
+
+    .rsf-wrap .strip-val {
+        font-size: 22px;
+        font-weight: 700;
+        color: #FDB022;
+        display: block;
+        line-height: 1;
+        font-family: monospace;
+    }
+
+    .rsf-wrap .strip-lbl {
+        font-size: 11px;
+        color: #9CA3AF;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .rsf-wrap .strip-divider {
+        width: 1px;
+        height: 32px;
+        background: rgba(255,255,255,0.1);
+    }
+
+    /* Qty Hints */
+    .rsf-wrap .qty-hint {
+        font-size: 12px;
+        margin-top: 6px;
+        display: none;
+        align-items: center;
+        gap: 5px;
+    }
+    .rsf-wrap .qty-hint.show   { display: flex; }
+    .rsf-wrap .qty-hint.error  { color: #EF4444; }
+    .rsf-wrap .qty-hint.ok     { color: #10B981; }
+
+    /* Refund Preview */
+    .rsf-wrap .refund-preview {
+        display: none;
+        background: #FFFBEB;
+        border: 1px dashed #FDB022;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .rsf-wrap .refund-preview.show { display: flex; }
+    .rsf-wrap .refund-label  { font-size: 14px; color: #92400E; font-weight: 500; }
+    .rsf-wrap .refund-amount {
+        font-size: 22px;
+        font-weight: 700;
+        color: #D97706;
+        font-family: monospace;
+    }
+
+    /* Submit Button */
+    .rsf-wrap .btn-submit {
+        width: 100%;
+        padding: 13px;
+        background: linear-gradient(135deg, #1F2937, #374151);
+        color: #FDB022;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .rsf-wrap .btn-submit:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(31,41,55,0.3);
+    }
+
+    .rsf-wrap .btn-submit:disabled {
+        background: #E5E7EB;
+        color: #9CA3AF;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Info Sidebar */
+    .rsf-wrap .info-panel {
+        background: #1F2937;
+        border-radius: 12px;
+        padding: 22px;
+    }
+
+    .rsf-wrap .info-panel h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #FDB022;
+        margin: 0 0 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .rsf-wrap .info-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .rsf-wrap .info-step:last-of-type { margin-bottom: 0; }
+
+    .rsf-wrap .step-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: rgba(253,176,34,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #FDB022;
+        flex-shrink: 0;
+    }
+
+    .rsf-wrap .step-text strong {
+        display: block;
+        font-size: 13px;
+        color: #F9FAFB;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .rsf-wrap .step-text span {
+        font-size: 12px;
+        color: #9CA3AF;
+        line-height: 1.5;
+    }
+
+    .rsf-wrap .info-divider {
+        height: 1px;
+        background: rgba(255,255,255,0.08);
+        margin: 18px 0;
+    }
+
+    .rsf-wrap .stock-count-box {
+        background: rgba(253,176,34,0.1);
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .rsf-wrap .stock-count-box span  { font-size: 13px; color: #9CA3AF; }
+    .rsf-wrap .stock-count-box strong {
+        font-size: 20px;
+        font-weight: 700;
+        color: #FDB022;
+        font-family: monospace;
+    }
+
+    @media (max-width: 900px) {
+        .rsf-wrap .form-layout { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rsf-wrap">
+
+  <!-- Back -->
+  <a href="{{ url_for('distributor_return_stock.return_stock') }}" class="back-link">
+    <i class="fas fa-arrow-left"></i> Back to Return History
+  </a>
+
+  <div class="form-layout">
+
+    <!-- ── Form Card ─────────────────────────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon"><i class="fas fa-undo-alt"></i></div>
+        <div>
+          <h3>Submit Return Request</h3>
+          <p>Fill in the details to return stock to the warehouse</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="POST"
+              action="{{ url_for('distributor_return_stock.submit_return') }}"
+              id="rsf-form">
+
+          <!-- Product -->
+          <div class="form-group">
+            <label><i class="fas fa-box" style="margin-right:5px;color:#D97706;"></i> Product / Stock Item</label>
+            <select name="stock_id" id="rsf-select" required onchange="rsfOnChange(this)">
+              <option value="">— Choose a stock item —</option>
+              {% for s in stock_list %}
+                <option value="{{ s['stock_id'] }}"
+                        data-max="{{ s['quantity'] }}"
+                        data-price="{{ s['unit_price'] }}"
+                        data-size="{{ s['variant_size'] }}">
+                  {{ s['product_name'] }} · {{ s['variant_size'] }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Stock Info Strip -->
+          <div class="stock-strip" id="rsf-strip">
+            <div class="strip-stat">
+              <span class="strip-val" id="rsf-sq">0</span>
+              <span class="strip-lbl">In Stock</span>
+            </div>
+            <div class="strip-divider"></div>
+            <div class="strip-stat">
+              <span class="strip-val" id="rsf-sp">0.00</span>
+              <span class="strip-lbl">Unit Price (RM)</span>
+            </div>
+            <div class="strip-divider"></div>
+            <div class="strip-stat">
+              <span class="strip-val" id="rsf-ss">—</span>
+              <span class="strip-lbl">Variant</span>
+            </div>
+          </div>
+
+          <!-- Quantity -->
+          <div class="form-group">
+            <label><i class="fas fa-sort-numeric-up" style="margin-right:5px;color:#D97706;"></i> Quantity to Return</label>
+            <input type="number" name="quantity_returned" id="rsf-qty"
+                   min="1" value="1" required oninput="rsfQtyChange()">
+            <div class="qty-hint error" id="rsf-err">
+              <i class="fas fa-exclamation-circle"></i> Exceeds available stock
+            </div>
+            <div class="qty-hint ok" id="rsf-ok">
+              <i class="fas fa-check-circle"></i> Valid quantity
+            </div>
+          </div>
+
+          <!-- Reason -->
+          <div class="form-group">
+            <label><i class="fas fa-comment-alt" style="margin-right:5px;color:#D97706;"></i> Reason for Return</label>
+            <textarea name="reason"
+                      placeholder="e.g. Damaged packaging, Expired product, Overstocked…"></textarea>
+          </div>
+
+          <!-- Refund Preview -->
+          <div class="refund-preview" id="rsf-refund">
+            <span class="refund-label">
+              <i class="fas fa-coins" style="margin-right:6px;"></i>Estimated Refund
+            </span>
+            <span class="refund-amount">RM <span id="rsf-amt">0.00</span></span>
+          </div>
+
+          <button type="submit" class="btn-submit" id="rsf-btn" disabled>
+            <i class="fas fa-paper-plane"></i> Submit Return Request
+          </button>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Info Panel ─────────────────────────────────────────────── -->
+    <div class="info-panel">
+      <h4><i class="fas fa-info-circle"></i> How It Works</h4>
+
+      <div class="info-step">
+        <div class="step-icon"><i class="fas fa-mouse-pointer"></i></div>
+        <div class="step-text">
+          <strong>1. Select Product</strong>
+          <span>Choose the stock item from your current inventory</span>
+        </div>
+      </div>
+
+      <div class="info-step">
+        <div class="step-icon"><i class="fas fa-sort-numeric-up"></i></div>
+        <div class="step-text">
+          <strong>2. Enter Quantity</strong>
+          <span>Cannot exceed your current available stock</span>
+        </div>
+      </div>
+
+      <div class="info-step">
+        <div class="step-icon"><i class="fas fa-comment-alt"></i></div>
+        <div class="step-text">
+          <strong>3. Add Reason</strong>
+          <span>Helps admin process your request faster</span>
+        </div>
+      </div>
+
+      <div class="info-step">
+        <div class="step-icon"><i class="fas fa-paper-plane"></i></div>
+        <div class="step-text">
+          <strong>4. Submit</strong>
+          <span>Stock is deducted immediately and sent for review</span>
+        </div>
+      </div>
+
+      <div class="info-divider"></div>
+
+      <div class="stock-count-box">
+        <span>Available Stock Items</span>
+        <strong>{{ stock_list | length }}</strong>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /rsf-wrap -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var rsfMax = 0, rsfPrice = 0;
+
+  function rsfOnChange(select) {
+    var opt    = select.options[select.selectedIndex];
+    var strip  = document.getElementById('rsf-strip');
+    var refund = document.getElementById('rsf-refund');
+    var btn    = document.getElementById('rsf-btn');
+
+    if (!select.value) {
+      strip.classList.remove('show');
+      refund.classList.remove('show');
+      btn.disabled = true;
+      return;
+    }
+
+    rsfMax   = parseInt(opt.getAttribute('data-max')   || 0);
+    rsfPrice = parseFloat(opt.getAttribute('data-price') || 0);
+
+    document.getElementById('rsf-sq').textContent = rsfMax;
+    document.getElementById('rsf-sp').textContent = rsfPrice.toFixed(2);
+    document.getElementById('rsf-ss').textContent = opt.getAttribute('data-size') || '—';
+
+    var qtyEl = document.getElementById('rsf-qty');
+    qtyEl.max = rsfMax;
+    if (parseInt(qtyEl.value) > rsfMax) qtyEl.value = rsfMax;
+
+    strip.classList.add('show');
+    refund.classList.add('show');
+    rsfQtyChange();
+  }
+
+  function rsfQtyChange() {
+    var qty   = parseInt(document.getElementById('rsf-qty').value || 0);
+    var errEl = document.getElementById('rsf-err');
+    var okEl  = document.getElementById('rsf-ok');
+    var btn   = document.getElementById('rsf-btn');
+    var amt   = document.getElementById('rsf-amt');
+
+    amt.textContent = (qty * rsfPrice).toFixed(2);
+
+    var valid = qty > 0 && qty <= rsfMax && rsfMax > 0;
+    errEl.classList.toggle('show', qty > rsfMax);
+    okEl.classList.toggle('show', valid);
+    btn.disabled = !valid;
+  }
+
+  document.getElementById('rsf-form').addEventListener('submit', function(e) {
+    var qty    = parseInt(document.getElementById('rsf-qty').value || 0);
+    var select = document.getElementById('rsf-select');
+    var prod   = select.options[select.selectedIndex].text;
+    var amt    = document.getElementById('rsf-amt').textContent;
+
+    if (qty > rsfMax) { e.preventDefault(); return; }
+
+    var ok = confirm(
+      'Confirm Return Request\n\n' +
+      'Product  : ' + prod + '\n' +
+      'Quantity : ' + qty + ' unit(s)\n' +
+      'Est. Refund : RM ' + amt + '\n\n' +
+      'Stock will be deducted immediately.'
+    );
+    if (!ok) e.preventDefault();
+  });
+</script>
+{% endblock %}

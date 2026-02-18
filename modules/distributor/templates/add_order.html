@@ -1,183 +1,835 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Order - Golden Bee</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            padding: 20px;
-        }
-        .order-form {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .form-label {
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Place New Order</h2>
-            <a href="{{ url_for('distributor_order_bp.manage_orders') }}" class="btn btn-outline-secondary">
-                ← Back to Orders
-            </a>
+{% extends "distributor_base.html" %}
+
+{% block title %}Place New Order - Golden Bee{% endblock %}
+{% block page_title %}Place New Order{% endblock %}
+{% block breadcrumb %}Orders / Place New Order{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --gold-primary:   #E8A020;
+        --gold-light:     #F5C842;
+        --gold-pale:      #FFF8E7;
+        --gold-border:    #F0D080;
+        --ink:            #0F1923;
+        --ink-mid:        #3D4F60;
+        --ink-soft:       #7A8C9A;
+        --ink-faint:      #B8C5CF;
+        --surface:        #FFFFFF;
+        --surface-raised: #F7F9FB;
+        --surface-deep:   #EEF2F5;
+        --border:         #DDE4EA;
+        --green:          #0BA679;
+        --green-pale:     #E6F9F3;
+        --red:            #D93A3A;
+        --red-pale:       #FDEAEA;
+        --shadow-sm:      0 1px 3px rgba(15,25,35,0.06), 0 1px 2px rgba(15,25,35,0.04);
+        --shadow-md:      0 4px 16px rgba(15,25,35,0.08), 0 2px 6px rgba(15,25,35,0.05);
+        --shadow-gold:    0 4px 20px rgba(232,160,32,0.22);
+        --radius:         10px;
+        --radius-lg:      14px;
+        --transition:     all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Page wrapper ── */
+    .order-page {
+        max-width: 780px;
+        margin: 0 auto;
+        animation: pageFadeIn 0.4s ease both;
+    }
+
+    @keyframes pageFadeIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Back button (below form) ── */
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        width: 100%;
+        padding: 12px 18px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        color: var(--ink-mid);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .btn-back:hover {
+        border-color: var(--gold-primary);
+        color: var(--gold-primary);
+        background: var(--gold-pale);
+    }
+
+    /* ── Flash alerts ── */
+    .flash-alert {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        border-radius: var(--radius);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13.5px;
+        font-weight: 500;
+        margin-bottom: 18px;
+        border: 1px solid transparent;
+        animation: slideDown 0.3s ease both;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .flash-alert.success { background: var(--green-pale); color: #065F46; border-color: #A7F3D0; }
+    .flash-alert.error   { background: var(--red-pale);   color: #7F1D1D; border-color: #FECACA; }
+    .flash-alert .flash-icon { font-size: 16px; flex-shrink: 0; }
+    .flash-close { margin-left: auto; background: none; border: none; cursor: pointer; color: inherit; opacity: 0.6; padding: 0; font-size: 16px; }
+    .flash-close:hover { opacity: 1; }
+
+    /* ── Main form card ── */
+    .form-card {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+
+    /* ── Gold accent top strip ── */
+    .form-card::before {
+        content: '';
+        display: block;
+        height: 3px;
+        background: linear-gradient(90deg, var(--gold-primary), var(--gold-light), var(--gold-primary));
+        background-size: 200% 100%;
+        animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+        0%   { background-position: -200% 0; }
+        100% { background-position:  200% 0; }
+    }
+
+    /* ── Card header ── */
+    .card-header {
+        padding: 22px 32px 20px;
+        border-bottom: 1px solid var(--surface-deep);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .header-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--gold-primary), var(--gold-light));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 17px;
+        box-shadow: var(--shadow-gold);
+        flex-shrink: 0;
+    }
+
+    .card-title {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--ink);
+        margin: 0 0 2px;
+    }
+
+    .card-subtitle {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 12px;
+        color: var(--ink-soft);
+        margin: 0;
+    }
+
+    .step-indicator {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .step-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--border);
+        transition: var(--transition);
+    }
+
+    .step-dot.active {
+        background: var(--gold-primary);
+        box-shadow: 0 0 0 3px rgba(232,160,32,0.2);
+    }
+
+    /* ── Form body ── */
+    .card-body {
+        padding: 32px;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--surface-deep);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--surface-deep);
+    }
+
+    /* ── Two-col grid ── */
+    .field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .field-grid.one-col { grid-template-columns: 1fr; }
+
+    /* ── Field wrapper ── */
+    .field-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .field-wrap.mb { margin-bottom: 20px; }
+
+    /* ── Labels ── */
+    .field-label {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink-mid);
+        letter-spacing: 0.02em;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .req  { color: var(--red); }
+    .opt  { font-weight: 400; color: var(--ink-faint); font-size: 11px; }
+
+    /* ── Inputs ── */
+    .field-input,
+    .field-select {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 14px;
+        color: var(--ink);
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 11px 14px;
+        width: 100%;
+        transition: var(--transition);
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .field-input::placeholder { color: var(--ink-faint); }
+
+    .field-input:focus,
+    .field-select:focus {
+        outline: none;
+        border-color: var(--gold-primary);
+        box-shadow: 0 0 0 3px rgba(232,160,32,0.14);
+        background: var(--surface);
+    }
+
+    .field-input:hover:not(:focus):not([readonly]):not(:disabled),
+    .field-select:hover:not(:focus):not(:disabled) {
+        border-color: var(--ink-faint);
+    }
+
+    .field-input[readonly] {
+        background: var(--surface-raised);
+        color: var(--green);
+        font-weight: 700;
+        font-size: 15px;
+        cursor: default;
+        border-color: var(--surface-deep);
+    }
+
+    .field-select:disabled {
+        background: var(--surface-raised);
+        color: var(--ink-faint);
+        cursor: not-allowed;
+        border-style: dashed;
+    }
+
+    /* Custom select arrow */
+    .select-wrap { position: relative; }
+
+    .select-wrap::after {
+        content: '\f107';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--ink-soft);
+        pointer-events: none;
+        font-size: 13px;
+        transition: var(--transition);
+    }
+
+    .select-wrap:focus-within::after { color: var(--gold-primary); }
+
+    /* ── Hint text ── */
+    .field-hint {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 11.5px;
+        color: var(--ink-soft);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* ── Price badge (unit price display) ── */
+    .price-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 16px;
+        background: var(--surface-raised);
+        border: 1.5px solid var(--surface-deep);
+        border-radius: var(--radius);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink-faint);
+        transition: var(--transition);
+        min-height: 46px;
+    }
+
+    .price-badge.has-value {
+        color: var(--green);
+        border-color: var(--gold-border);
+        background: var(--gold-pale);
+    }
+
+    .price-badge .price-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: var(--surface-deep);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        color: var(--ink-soft);
+        flex-shrink: 0;
+        transition: var(--transition);
+    }
+
+    .price-badge.has-value .price-icon {
+        background: var(--gold-primary);
+        color: white;
+    }
+
+    /* ── Qty row ── */
+    .qty-stepper {
+        display: flex;
+        align-items: center;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--surface);
+        transition: var(--transition);
+    }
+
+    .qty-stepper:focus-within {
+        border-color: var(--gold-primary);
+        box-shadow: 0 0 0 3px rgba(232,160,32,0.14);
+    }
+
+    .qty-btn {
+        width: 42px;
+        height: 44px;
+        background: var(--surface-raised);
+        border: none;
+        font-size: 18px;
+        font-weight: 300;
+        color: var(--ink-mid);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        flex-shrink: 0;
+        user-select: none;
+    }
+
+    .qty-btn:hover { background: var(--surface-deep); color: var(--ink); }
+    .qty-btn:active { background: var(--gold-pale); color: var(--gold-primary); }
+
+    .qty-number {
+        flex: 1;
+        border: none;
+        text-align: center;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--ink);
+        padding: 0;
+        background: transparent;
+        min-width: 0;
+    }
+
+    .qty-number:focus { outline: none; }
+
+    /* ── Divider ── */
+    .form-divider {
+        border: none;
+        border-top: 1px solid var(--surface-deep);
+        margin: 28px 0;
+    }
+
+    /* ── Subtotal block ── */
+    .subtotal-block {
+        background: linear-gradient(135deg, #FFFBF0, #FFF3CC);
+        border: 1.5px solid var(--gold-border);
+        border-radius: var(--radius-lg);
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 28px;
+    }
+
+    .subtotal-label-group { display: flex; flex-direction: column; gap: 3px; }
+
+    .subtotal-label {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+    }
+
+    .subtotal-desc {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 12px;
+        color: var(--ink-faint);
+    }
+
+    .subtotal-amount {
+        font-family: 'DM Serif Display', serif;
+        font-size: 30px;
+        color: var(--ink);
+        letter-spacing: -0.5px;
+    }
+
+    .subtotal-amount span {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink-soft);
+        margin-right: 4px;
+    }
+
+    /* ── Action buttons ── */
+    .action-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-primary-submit {
+        width: 100%;
+        padding: 14px 20px;
+        background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-light) 100%);
+        border: none;
+        border-radius: var(--radius);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        transition: var(--transition);
+        box-shadow: 0 2px 12px rgba(232,160,32,0.30);
+        letter-spacing: 0.01em;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary-submit::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .btn-primary-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(232,160,32,0.40);
+    }
+
+    .btn-primary-submit:hover::after { opacity: 1; }
+    .btn-primary-submit:active { transform: translateY(0); }
+
+    .btn-ghost-cancel {
+        width: 100%;
+        padding: 12px 20px;
+        background: transparent;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--ink-mid);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: var(--transition);
+        text-decoration: none;
+    }
+
+    .btn-ghost-cancel:hover {
+        border-color: var(--red);
+        color: var(--red);
+        background: var(--red-pale);
+    }
+
+    /* ── Info footer ── */
+    .form-footer-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 14px 18px;
+        background: var(--surface-raised);
+        border-radius: var(--radius);
+        border: 1px solid var(--surface-deep);
+        margin-top: 16px;
+    }
+
+    .form-footer-note i {
+        color: var(--ink-faint);
+        font-size: 14px;
+        margin-top: 1px;
+        flex-shrink: 0;
+    }
+
+    .form-footer-note p {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 12px;
+        color: var(--ink-soft);
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    /* ── Required field legend ── */
+    .required-note {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 11.5px;
+        color: var(--ink-faint);
+        margin-bottom: 22px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+        .card-body  { padding: 22px 18px; }
+        .field-grid { grid-template-columns: 1fr; }
+        .subtotal-block { flex-direction: column; align-items: flex-start; gap: 8px; }
+        .page-heading { font-size: 22px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-page">
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-alert {{ 'success' if category != 'error' else 'error' }}">
+                    <i class="flash-icon fas fa-{{ 'check-circle' if category != 'error' else 'exclamation-circle' }}"></i>
+                    {{ message }}
+                    <button class="flash-close" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Form Card -->
+    <div class="form-card">
+
+        <!-- Card Header -->
+        <div class="card-header">
+            <div class="card-header-left">
+                <div class="header-icon">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div>
+                    <p class="card-title">Order Request Form</p>
+                    <p class="card-subtitle">Fill in the details below to submit your order</p>
+                </div>
+            </div>
+            <div class="step-indicator">
+                <div class="step-dot active"></div>
+                <div class="step-dot active"></div>
+                <div class="step-dot"></div>
+            </div>
         </div>
 
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <!-- Card Body -->
+        <div class="card-body">
+            <p class="required-note">
+                <span style="color: var(--red); font-size: 13px;">*</span>
+                Required fields
+            </p>
 
-        <div class="order-form">
             <form method="POST" action="{{ url_for('distributor_order_bp.add_order') }}">
-                <!-- Category Dropdown -->
-                <div class="mb-3">
-                    <label for="category_id" class="form-label">Category *</label>
-                    <select class="form-select" name="category_id" id="category_id" required onchange="fetchProducts()">
-                        <option value="">-- Select Category --</option>
-                        {% for category in categories %}
-                            <option value="{{ category.category_id }}">
-                                {{ category.category_name }}
-                            </option>
-                        {% endfor %}
-                    </select>
+
+                <!-- SECTION: Product Selection -->
+                <div class="section-label">Product Selection</div>
+
+                <div class="field-grid">
+                    <!-- Category -->
+                    <div class="field-wrap">
+                        <label class="field-label">
+                            Category <span class="req">*</span>
+                        </label>
+                        <div class="select-wrap">
+                            <select class="field-select" name="category_id" id="category_id"
+                                    required onchange="fetchProducts()">
+                                <option value="">Select a category</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.category_id }}">
+                                        {{ category.category_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Product -->
+                    <div class="field-wrap">
+                        <label class="field-label">
+                            Product <span class="req">*</span>
+                        </label>
+                        <div class="select-wrap">
+                            <select class="field-select" name="product_id" id="product_id"
+                                    required disabled>
+                                <option value="">Select category first</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Product Dropdown -->
-                <div class="mb-3">
-                    <label for="product_id" class="form-label">Product *</label>
-                    <select class="form-select" name="product_id" id="product_id" required disabled>
-                        <option value="">-- Select Product --</option>
-                    </select>
+                <!-- Unit Price -->
+                <div class="field-wrap mb">
+                    <label class="field-label">Unit Price</label>
+                    <div class="price-badge" id="priceBadge">
+                        <div class="price-icon"><i class="fas fa-tag"></i></div>
+                        <span id="priceText">— Select a product to see price</span>
+                    </div>
+                    <input type="hidden" id="unit_price" name="unit_price">
                 </div>
 
-                <!-- Unit Price (Auto-filled) -->
-                <div class="mb-3">
-                    <label for="unit_price" class="form-label">Unit Price</label>
-                    <input type="text" class="form-control" id="unit_price" name="unit_price" readonly>
-                    <small class="text-muted">Price will be auto-filled when you select a product</small>
+                <hr class="form-divider">
+
+                <!-- SECTION: Order Details -->
+                <div class="section-label">Order Details</div>
+
+                <div class="field-grid">
+                    <!-- Variant -->
+                    <div class="field-wrap">
+                        <label class="field-label">
+                            Size / Variant <span class="opt">(optional)</span>
+                        </label>
+                        <input type="text" class="field-input" id="variant_size"
+                               name="variant_size" placeholder="e.g. 500ml, Large, Red">
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="field-wrap">
+                        <label class="field-label">
+                            Quantity <span class="req">*</span>
+                        </label>
+                        <div class="qty-stepper">
+                            <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+                            <input type="number" class="qty-number" id="quantity"
+                                   name="quantity" value="1" min="1" oninput="calculateTotal()">
+                            <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Variant Size -->
-                <div class="mb-3">
-                    <label for="variant_size" class="form-label">Size/Variant (Optional)</label>
-                    <input type="text" class="form-control" id="variant_size" name="variant_size" 
-                           placeholder="e.g., Large, 500ml, Red">
+                <input type="hidden" id="subtotal" name="subtotal" value="0">
+
+                <hr class="form-divider">
+
+                <!-- Subtotal -->
+                <div class="subtotal-block">
+                    <div class="subtotal-label-group">
+                        <span class="subtotal-label">Order Subtotal</span>
+                        <span class="subtotal-desc">Price × Quantity</span>
+                    </div>
+                    <div class="subtotal-amount">
+                        <span>Rs.</span><span id="subtotalValue">0.00</span>
+                    </div>
                 </div>
 
-                <!-- Quantity -->
-                <div class="mb-3">
-                    <label for="quantity" class="form-label">Quantity *</label>
-                    <input type="number" class="form-control" id="quantity" name="quantity" 
-                           value="1" min="1" required oninput="calculateTotal()">
-                </div>
-
-                <!-- Subtotal Display -->
-                <div class="mb-3">
-                    <label class="form-label">Subtotal</label>
-                    <div class="form-control bg-light" id="subtotal_display">$0.00</div>
-                    <input type="hidden" id="subtotal" name="subtotal">
-                </div>
-
-                <!-- Submit Button -->
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg">Place Order Request</button>
-                    <a href="{{ url_for('distributor_order_bp.manage_orders') }}" class="btn btn-outline-secondary">
+                <!-- Action Buttons -->
+                <div class="action-row">
+                    <button type="submit" class="btn-primary-submit">
+                        <i class="fas fa-paper-plane"></i>
+                        Submit Order Request
+                    </button>
+                    <a href="{{ url_for('distributor_order_bp.manage_orders') }}"
+                       class="btn-ghost-cancel">
+                        <i class="fas fa-times"></i>
                         Cancel
                     </a>
                 </div>
+
+                <!-- Footer Note -->
+                <div class="form-footer-note">
+                    <i class="fas fa-shield-alt"></i>
+                    <p>Your order will be submitted as a <strong>pending request</strong> and reviewed
+                       by our team. You'll be notified once it has been confirmed or updated.</p>
+                </div>
+
             </form>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        // Function to fetch products based on the selected category
-        function fetchProducts() {
-            var category_id = document.getElementById('category_id').value;
-            if (!category_id) {
-                document.getElementById('product_id').disabled = true;
-                document.getElementById('product_id').innerHTML = '<option value="">-- Select Product --</option>';
-                document.getElementById('unit_price').value = '';
-                calculateTotal();
-                return;
-            }
-            
-            // Use the correct URL from your Flask routes
-            fetch('{{ url_for("distributor_order_bp.get_products", category_id="") }}' + category_id)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    var productSelect = document.getElementById('product_id');
-                    productSelect.innerHTML = '<option value="">-- Select Product --</option>';
-                    
-                    data.products.forEach(function(product) {
-                        var option = document.createElement('option');
-                        option.value = product.product_id;
-                        option.textContent = product.product_name;
-                        option.dataset.price = product.unit_price;
-                        productSelect.appendChild(option);
-                    });
-                    
-                    productSelect.disabled = false;
-                    productSelect.value = '';
-                    document.getElementById('unit_price').value = '';
-                    calculateTotal();
-                })
-                .catch(err => {
-                    console.log("Error fetching products:", err);
-                    alert('Error loading products. Please try again.');
+    <!-- Back to Orders (below card) -->
+    <a href="{{ url_for('distributor_order_bp.manage_orders') }}" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Back to Orders
+    </a>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ── Fetch products by category ──
+    function fetchProducts() {
+        const categoryId  = document.getElementById('category_id').value;
+        const productSel  = document.getElementById('product_id');
+
+        resetPrice();
+
+        if (!categoryId) {
+            productSel.disabled = true;
+            productSel.innerHTML = '<option value="">Select category first</option>';
+            calculateTotal();
+            return;
+        }
+
+        fetch('{{ url_for("distributor_order_bp.get_products", category_id="") }}' + categoryId)
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(data => {
+                productSel.innerHTML = '<option value="">Select a product</option>';
+                data.products.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value          = p.product_id;
+                    opt.textContent    = p.product_name;
+                    opt.dataset.price  = p.unit_price;
+                    productSel.appendChild(opt);
                 });
+                productSel.disabled = false;
+            })
+            .catch(() => alert('Error loading products. Please try again.'));
+    }
+
+    // ── Product change → update price display ──
+    document.getElementById('product_id').addEventListener('change', function () {
+        const opt   = this.options[this.selectedIndex];
+        const price = parseFloat(opt?.dataset?.price) || 0;
+
+        const badge     = document.getElementById('priceBadge');
+        const priceText = document.getElementById('priceText');
+        const hidden    = document.getElementById('unit_price');
+
+        if (price > 0) {
+            badge.classList.add('has-value');
+            priceText.textContent = 'Rs. ' + price.toFixed(2);
+            hidden.value = price.toFixed(2);
+        } else {
+            resetPrice();
         }
-        
-        // When product selection changes, update the unit price
-        document.getElementById('product_id').addEventListener('change', function() {
-            var selectedOption = this.options[this.selectedIndex];
-            var price = selectedOption.dataset.price || 0;
-            document.getElementById('unit_price').value = '$' + parseFloat(price).toFixed(2);
-            calculateTotal();
-        });
-        
-        // Calculate total price
-        function calculateTotal() {
-            var productSelect = document.getElementById('product_id');
-            var quantity = document.getElementById('quantity').value || 0;
-            var price = 0;
-            
-            if (productSelect.selectedIndex > 0) {
-                price = productSelect.options[productSelect.selectedIndex].dataset.price || 0;
-            }
-            
-            var subtotal = parseFloat(price) * parseInt(quantity);
-            document.getElementById('subtotal_display').textContent = '$' + subtotal.toFixed(2);
-            document.getElementById('subtotal').value = subtotal.toFixed(2);
-        }
-        
-        // Initialize calculation on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            calculateTotal();
-        });
-    </script>
-</body>
-</html>
+        calculateTotal();
+    });
+
+    function resetPrice() {
+        const badge = document.getElementById('priceBadge');
+        badge.classList.remove('has-value');
+        document.getElementById('priceText').textContent = '— Select a product to see price';
+        document.getElementById('unit_price').value = '';
+        calculateTotal();
+    }
+
+    // ── Qty stepper ──
+    function changeQty(delta) {
+        const inp = document.getElementById('quantity');
+        inp.value = Math.max(1, (parseInt(inp.value) || 1) + delta);
+        calculateTotal();
+    }
+
+    // ── Calculate subtotal ──
+    function calculateTotal() {
+        const productSel = document.getElementById('product_id');
+        const qty        = parseInt(document.getElementById('quantity').value) || 0;
+        const priceStr   = productSel.selectedIndex > 0
+            ? productSel.options[productSel.selectedIndex].dataset.price
+            : '0';
+        const price    = parseFloat(priceStr) || 0;
+        const subtotal = price * qty;
+
+        document.getElementById('subtotalValue').textContent = subtotal.toFixed(2);
+        document.getElementById('subtotal').value            = subtotal.toFixed(2);
+    }
+
+    document.getElementById('quantity').addEventListener('input', calculateTotal);
+    document.addEventListener('DOMContentLoaded', calculateTotal);
+</script>
+{% endblock %}

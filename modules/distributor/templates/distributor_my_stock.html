@@ -97,6 +97,40 @@
         margin: 0;
     }
 
+    .search-box {
+        position: relative;
+        width: 300px;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6B7280;
+        font-size: 14px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 10px 12px 10px 38px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: #FDB022;
+        box-shadow: 0 0 0 3px rgba(253, 176, 34, 0.1);
+    }
+
+    .search-box input::placeholder {
+        color: #9CA3AF;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
@@ -221,6 +255,16 @@
             grid-template-columns: 1fr;
         }
         
+        .table-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+        
+        .search-box {
+            width: 100%;
+        }
+        
         table {
             font-size: 12px;
         }
@@ -280,6 +324,10 @@
 <div class="table-container">
     <div class="table-header">
         <h2><i class="fas fa-warehouse"></i> My Inventory</h2>
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search products..." onkeyup="searchTable()">
+        </div>
     </div>
     
     {% if stock_items %}
@@ -299,15 +347,6 @@
             <tr>
                 <td>
                     <div class="product-cell">
-                        {% if item.product_image %}
-                        <img src="{{ url_for('static', filename='uploads/products/' + item.product_image) }}" 
-                             alt="{{ item.product_name }}" 
-                             class="product-image">
-                        {% else %}
-                        <div class="product-image" style="background: #F3F4F6; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-image" style="color: #9CA3AF;"></i>
-                        </div>
-                        {% endif %}
                         <div class="product-info">
                             <div class="product-name">{{ item.product_name }}</div>
                             {% if item.variant_size %}
@@ -316,7 +355,12 @@
                         </div>
                     </div>
                 </td>
-                <td>{{ item.category_name }}</td>
+                <td>
+                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: #F3F4F6; border-radius: 6px; font-size: 13px; color: #374151;">
+                        <i class="fas fa-tag" style="color: #6B7280;"></i>
+                        {{ item.category_name }}
+                    </span>
+                </td>
                 <td>
                     {% if item.quantity == 0 %}
                     <span class="qty-badge qty-out">
@@ -354,4 +398,70 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+function searchTable() {
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toUpperCase();
+    const table = document.querySelector('table');
+    const tbody = table ? table.querySelector('tbody') : null;
+    
+    if (!tbody) return;
+    
+    const rows = tbody.getElementsByTagName('tr');
+    let visibleCount = 0;
+    
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        
+        // Get all text content from the row
+        const rowText = row.textContent || row.innerText;
+        
+        if (rowText.toUpperCase().indexOf(filter) > -1) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    }
+    
+    // Handle empty results
+    const tableWrapper = table.parentElement;
+    let noResultsMsg = document.getElementById('noResultsMessage');
+    
+    if (visibleCount === 0 && filter !== '') {
+        // Hide table
+        table.style.display = 'none';
+        
+        // Show no results message
+        if (!noResultsMsg) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.id = 'noResultsMessage';
+            noResultsMsg.className = 'empty-state';
+            noResultsMsg.innerHTML = `
+                <div class="empty-icon"><i class="fas fa-search"></i></div>
+                <div class="empty-title">No Results Found</div>
+                <div class="empty-text">No products match "${input.value}"</div>
+            `;
+            tableWrapper.appendChild(noResultsMsg);
+        }
+    } else {
+        // Show table
+        table.style.display = 'table';
+        
+        // Remove no results message
+        if (noResultsMsg) {
+            noResultsMsg.remove();
+        }
+    }
+}
+
+// Clear search on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+});
+</script>
 {% endblock %}

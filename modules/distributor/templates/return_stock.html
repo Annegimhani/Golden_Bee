@@ -1,0 +1,521 @@
+{% extends 'distributor_base.html' %}
+{% block title %}Return Stock - Golden Bee{% endblock %}
+{% block page_title %}Return Stock{% endblock %}
+{% block breadcrumb %}Inventory / Return Stock{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── ALL scoped to .rsh-wrap — no leakage ── */
+
+    /* Stats */
+    .rsh-wrap .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .rsh-wrap .stat-card {
+        background: white;
+        padding: 20px 24px;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .rsh-wrap .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    }
+
+    /* Icon circle */
+    .rsh-wrap .stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+    .rsh-wrap .stat-icon.primary { background: #DBEAFE; color: #3B82F6; }
+    .rsh-wrap .stat-icon.warning { background: #FEF3C7; color: #F59E0B; }
+    .rsh-wrap .stat-icon.success { background: #D1FAE5; color: #10B981; }
+    .rsh-wrap .stat-icon.danger  { background: #FEE2E2; color: #EF4444; }
+
+    .rsh-wrap .stat-info { flex: 1; min-width: 0; }
+
+    .rsh-wrap .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .rsh-wrap .stat-value.primary { color: #3B82F6; }
+    .rsh-wrap .stat-value.warning { color: #F59E0B; }
+    .rsh-wrap .stat-value.success { color: #10B981; }
+    .rsh-wrap .stat-value.danger  { color: #EF4444; }
+
+    .rsh-wrap .stat-label {
+        font-size: 13px;
+        color: #6B7280;
+        font-weight: 500;
+    }
+
+    /* Action Bar */
+    .rsh-wrap .action-bar {
+        background: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .rsh-wrap .action-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+
+    /* Filter Buttons */
+    .rsh-wrap .filter-btn {
+        padding: 9px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid #E5E7EB;
+        background: white;
+        color: #6B7280;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .rsh-wrap .filter-btn:hover {
+        border-color: #FDB022;
+        color: #1F2937;
+    }
+
+    .rsh-wrap .filter-btn.active {
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        color: #1F2937;
+        border-color: #FDB022;
+        box-shadow: 0 2px 8px rgba(253,176,34,0.2);
+    }
+
+    /* Search Box */
+    .rsh-wrap .search-box {
+        position: relative;
+        width: 280px;
+    }
+
+    .rsh-wrap .search-box i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6B7280;
+        font-size: 14px;
+    }
+
+    .rsh-wrap .search-box input {
+        width: 100%;
+        padding: 10px 12px 10px 36px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .rsh-wrap .search-box input:focus {
+        outline: none;
+        border-color: #FDB022;
+        box-shadow: 0 0 0 3px rgba(253,176,34,0.1);
+    }
+
+    .rsh-wrap .search-box input::placeholder { color: #9CA3AF; }
+
+    /* New Return Button */
+    .rsh-wrap .btn-new-return {
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        color: #1F2937;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        border: none;
+        box-shadow: 0 2px 8px rgba(253,176,34,0.2);
+        white-space: nowrap;
+    }
+
+    .rsh-wrap .btn-new-return:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(253,176,34,0.35);
+        color: #1F2937;
+        text-decoration: none;
+    }
+
+    /* Table Container */
+    .rsh-wrap .table-container {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #E5E7EB;
+    }
+
+    .rsh-wrap table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .rsh-wrap thead {
+        background: #F9FAFB;
+    }
+
+    .rsh-wrap th {
+        padding: 14px 20px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+    }
+
+    .rsh-wrap tbody tr {
+        border-bottom: 1px solid #F3F4F6;
+        transition: background 0.2s;
+    }
+
+    .rsh-wrap tbody tr:last-child { border-bottom: none; }
+    .rsh-wrap tbody tr:hover { background: #F9FAFB; }
+
+    .rsh-wrap td {
+        padding: 15px 20px;
+        font-size: 14px;
+        color: #111827;
+        vertical-align: middle;
+    }
+
+    .rsh-wrap .td-id {
+        font-family: monospace;
+        font-size: 13px;
+        color: #9CA3AF;
+    }
+
+    .rsh-wrap .td-product {
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .rsh-wrap .size-pill {
+        display: inline-block;
+        background: #F3F4F6;
+        color: #374151;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .rsh-wrap .qty-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        background: #DBEAFE;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #1E40AF;
+        font-size: 14px;
+    }
+
+    .rsh-wrap .td-reason {
+        max-width: 180px;
+        color: #6B7280;
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .rsh-wrap .td-date {
+        font-size: 13px;
+        color: #6B7280;
+        white-space: nowrap;
+    }
+
+    /* Status Badges */
+    .rsh-wrap .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        min-width: 90px;
+        justify-content: center;
+    }
+
+    .rsh-wrap .status-pending  { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+    .rsh-wrap .status-approved { background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; }
+    .rsh-wrap .status-rejected { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+
+    /* Empty State */
+    .rsh-wrap .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .rsh-wrap .empty-icon {
+        font-size: 56px;
+        color: #D1D5DB;
+        margin-bottom: 20px;
+    }
+
+    .rsh-wrap .empty-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 10px;
+    }
+
+    .rsh-wrap .empty-text {
+        color: #6B7280;
+        margin-bottom: 24px;
+        font-size: 15px;
+    }
+
+    @media (max-width: 768px) {
+        .rsh-wrap .stats-grid { grid-template-columns: 1fr 1fr; }
+        .rsh-wrap .stat-card  { padding: 16px; }
+        .rsh-wrap .action-bar { flex-direction: column; align-items: stretch; }
+        .rsh-wrap .btn-new-return { justify-content: center; }
+        .rsh-wrap .search-box { width: 100%; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rsh-wrap">
+
+  {% set total_returns   = return_history | length %}
+  {% set approved_count  = return_history | selectattr('status','equalto','approved') | list | length %}
+  {% set pending_count   = return_history | selectattr('status','equalto','pending')  | list | length %}
+  {% set rejected_count  = return_history | selectattr('status','equalto','rejected') | list | length %}
+
+  <!-- ── Stat Cards ──────────────────────────────────────────────────── -->
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-icon primary"><i class="fas fa-receipt"></i></div>
+      <div class="stat-info">
+        <div class="stat-value primary">{{ total_returns }}</div>
+        <div class="stat-label">Total Requests</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon warning"><i class="fas fa-clock"></i></div>
+      <div class="stat-info">
+        <div class="stat-value warning">{{ pending_count }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon success"><i class="fas fa-check-circle"></i></div>
+      <div class="stat-info">
+        <div class="stat-value success">{{ approved_count }}</div>
+        <div class="stat-label">Approved</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon danger"><i class="fas fa-times-circle"></i></div>
+      <div class="stat-info">
+        <div class="stat-value danger">{{ rejected_count }}</div>
+        <div class="stat-label">Rejected</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Action Bar (filters + search + button) ─────────────────────── -->
+  <div class="action-bar">
+    <div class="action-bar-left">
+      <button class="filter-btn active" onclick="rshFilter('all', this)">
+        <i class="fas fa-list"></i> All
+      </button>
+      <button class="filter-btn" onclick="rshFilter('pending', this)">
+        <i class="fas fa-clock"></i> Pending
+      </button>
+      <button class="filter-btn" onclick="rshFilter('approved', this)">
+        <i class="fas fa-check-circle"></i> Approved
+      </button>
+      <button class="filter-btn" onclick="rshFilter('rejected', this)">
+        <i class="fas fa-times-circle"></i> Rejected
+      </button>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="rsh-search-input"
+               placeholder="Search product, reason…"
+               oninput="rshSearch()">
+      </div>
+      <a href="{{ url_for('distributor_return_stock.return_stock_form') }}" class="btn-new-return">
+        <i class="fas fa-plus-circle"></i> Submit Return Request
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Table ──────────────────────────────────────────────────────── -->
+  <div class="table-container">
+    {% if return_history %}
+    <table id="rsh-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Product</th>
+          <th>Size</th>
+          <th>Qty Returned</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="rsh-tbody">
+        {% for r in return_history %}
+        <tr class="rsh-row"
+            data-product="{{ r['product_name'] | lower }}"
+            data-reason="{{ (r['reason'] or '') | lower }}"
+            data-status="{{ r['status'] | lower }}">
+          <td class="td-id">{{ r['return_id'] }}</td>
+          <td class="td-product">{{ r['product_name'] }}</td>
+          <td><span class="size-pill">{{ r['variant_size'] }}</span></td>
+          <td>
+            <span class="qty-badge">
+              <i class="fas fa-boxes"></i> {{ r['quantity_returned'] }}
+            </span>
+          </td>
+          <td class="td-reason" title="{{ r['reason'] or '' }}">{{ r['reason'] or '—' }}</td>
+          <td>
+            {% if r['status'] == 'pending' %}
+              <span class="status-badge status-pending">
+                <i class="fas fa-clock"></i> Pending
+              </span>
+            {% elif r['status'] == 'approved' %}
+              <span class="status-badge status-approved">
+                <i class="fas fa-check"></i> Approved
+              </span>
+            {% else %}
+              <span class="status-badge status-rejected">
+                <i class="fas fa-times"></i> Rejected
+              </span>
+            {% endif %}
+          </td>
+          <td class="td-date">
+            <i class="far fa-calendar-alt" style="margin-right:5px;"></i>
+            {{ r['created_at'].strftime('%d/%m/%Y') if r['created_at'] else '—' }}
+          </td>
+        </tr>
+        {% endfor %}
+        <!-- No results placeholder -->
+        <tr id="rsh-no-results" style="display:none;">
+          <td colspan="7" style="text-align:center; padding:40px; color:#9CA3AF; font-size:14px;">
+            <i class="fas fa-search" style="font-size:24px; margin-bottom:8px; display:block;"></i>
+            No results match your search.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon"><i class="fas fa-undo-alt"></i></div>
+      <div class="empty-title">No Return Requests Yet</div>
+      <div class="empty-text">You haven't submitted any stock return requests.</div>
+      <a href="{{ url_for('distributor_return_stock.return_stock_form') }}" class="btn-new-return">
+        <i class="fas fa-plus-circle"></i> Submit First Return
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+</div><!-- /rsh-wrap -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function rshFilter(status, btn) {
+    document.querySelectorAll('.rsh-wrap .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    var rows    = document.querySelectorAll('#rsh-tbody .rsh-row');
+    var visible = 0;
+
+    rows.forEach(function(row) {
+      var rowStatus = row.getAttribute('data-status') || '';
+      var show = (status === 'all' || rowStatus === status);
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    rshToggleNoResults(visible);
+  }
+
+  function rshSearch() {
+    var val  = document.getElementById('rsh-search-input').value.toLowerCase().trim();
+    var rows = document.querySelectorAll('#rsh-tbody .rsh-row');
+    var visible = 0;
+
+    rows.forEach(function(row) {
+      var product = row.getAttribute('data-product') || '';
+      var reason  = row.getAttribute('data-reason')  || '';
+      var status  = row.getAttribute('data-status')  || '';
+      var show    = !val || product.includes(val) || reason.includes(val) || status.includes(val);
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    rshToggleNoResults(visible);
+  }
+
+  function rshToggleNoResults(visible) {
+    var noRes = document.getElementById('rsh-no-results');
+    if (noRes) noRes.style.display = (visible === 0) ? '' : 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var inp = document.getElementById('rsh-search-input');
+    if (inp) inp.value = '';
+  });
+</script>
+{% endblock %}

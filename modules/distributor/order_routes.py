@@ -6,7 +6,7 @@ import MySQLdb
 bcrypt = None
 mysql = None
 
-# Create Blueprint for distributor order management with original name
+# Create Blueprint for distributor order management
 distributor_order_bp = Blueprint(
     'distributor_order_bp', 
     __name__, 
@@ -20,7 +20,7 @@ def manage_orders():
     distributor_id = session.get('distributor_id')
     if not distributor_id:
         flash("Please log in first", "error")
-        return redirect(url_for('distributor_order_bp.distributor_login'))
+        return redirect(url_for('distributor_bp.login'))
 
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
@@ -51,16 +51,172 @@ def manage_orders():
 
     return render_template('manage_orders.html', orders=orders)
 
+# NEW: Get unread message count
+@distributor_order_bp.route('/unread_count')
+def unread_count():
+    distributor_id = session.get('distributor_id')
+    if not distributor_id:
+        return jsonify({'count': 0})
+    
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    try:
+        # Count unread admin messages for this distributor
+        cur.execute("""
+            SELECT COUNT(*) as count
+            FROM messages m
+            JOIN orders o ON m.order_id = o.order_id
+            WHERE o.distributor_id = %s 
+            AND m.admin_id IS NOT NULL 
+            AND m.is_read = 0
+        """, (distributor_id,))
+        
+        result = cur.fetchone()
+        count = result['count'] if result else 0
+        
+        return jsonify({'count': count})
+        
+    except Exception as e:
+        return jsonify({'count': 0, 'error': str(e)})
+    finally:
+        cur.close()
+
+# NEW: Get messages for an order
+@distributor_order_bp.route('/get_messages/<int:order_id>')
+def get_messages(order_id):
+    distributor_id = session.get('distributor_id')
+    if not distributor_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    # Verify order belongs to distributor
+    cur.execute("""
+        SELECT order_id FROM orders 
+        WHERE order_id = %s AND distributor_id = %s
+    """, (order_id, distributor_id))
+    
+    if not cur.fetchone():
+        cur.close()
+        return jsonify({'error': 'Order not found'}), 404
+    
+    # Get all messages for this order
+    cur.execute("""
+        SELECT 
+            message_id,
+            order_id,
+            distributor_id,
+            admin_id,
+            message,
+            message_type,
+            created_at,
+            is_read
+        FROM messages
+        WHERE order_id = %s
+        ORDER BY created_at ASC
+    """, (order_id,))
+    
+    messages = cur.fetchall()
+    cur.close()
+    
+    # Format messages for JSON
+    formatted_messages = []
+    for msg in messages:
+        formatted_messages.append({
+            'message_id': msg['message_id'],
+            'message': msg['message'],
+            'message_type': msg['message_type'],
+            'created_at': msg['created_at'].strftime('%Y-%m-%d %H:%M:%S') if msg['created_at'] else '',
+            'is_from_admin': msg['admin_id'] is not None,
+            'is_read': msg['is_read']
+        })
+    
+    return jsonify({'messages': formatted_messages})
+
+# NEW: Send message
+@distributor_order_bp.route('/send_message', methods=['POST'])
+def send_message():
+    distributor_id = session.get('distributor_id')
+    if not distributor_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    order_id = data.get('order_id')
+    message = data.get('message', '').strip()
+    
+    if not order_id or not message:
+        return jsonify({'error': 'Missing data'}), 400
+    
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    try:
+        # Verify order belongs to distributor
+        cur.execute("""
+            SELECT order_id FROM orders 
+            WHERE order_id = %s AND distributor_id = %s
+        """, (order_id, distributor_id))
+        
+        if not cur.fetchone():
+            return jsonify({'error': 'Order not found'}), 404
+        
+        # Insert message
+        cur.execute("""
+            INSERT INTO messages 
+            (order_id, distributor_id, message, message_type, created_at, is_read)
+            VALUES (%s, %s, %s, 'question', NOW(), 0)
+        """, (order_id, distributor_id, message))
+        
+        mysql.connection.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Message sent successfully'
+        })
+        
+    except Exception as e:
+        mysql.connection.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+
+# NEW: Mark messages as read
+@distributor_order_bp.route('/mark_messages_read/<int:order_id>', methods=['POST'])
+def mark_messages_read(order_id):
+    distributor_id = session.get('distributor_id')
+    if not distributor_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    cur = mysql.connection.cursor()
+    
+    try:
+        # Mark admin messages as read for this order
+        cur.execute("""
+            UPDATE messages 
+            SET is_read = 1 
+            WHERE order_id = %s 
+            AND distributor_id = %s 
+            AND admin_id IS NOT NULL
+            AND is_read = 0
+        """, (order_id, distributor_id))
+        
+        mysql.connection.commit()
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        mysql.connection.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+
 # Route to add a new order
 @distributor_order_bp.route('/add_order', methods=["GET", "POST"])
 def add_order():
     distributor_id = session.get('distributor_id')
     if not distributor_id:
         flash("Please log in first", "error")
-        return redirect(url_for('distributor_order_bp.distributor_login'))
+        return redirect(url_for('distributor_bp.login'))
 
     if request.method == "POST":
-        # Get form data
         category_id = request.form.get("category_id")
         product_id = request.form.get("product_id")
         quantity = int(request.form.get("quantity", 1))
@@ -69,7 +225,6 @@ def add_order():
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         
         try:
-            # 1. Get product price
             cur.execute("""
                 SELECT unit_price, product_name FROM products 
                 WHERE product_id = %s
@@ -84,7 +239,6 @@ def add_order():
             product_name = product['product_name']
             subtotal = unit_price * quantity
             
-            # 2. Get category name
             cur.execute("""
                 SELECT category_name FROM category 
                 WHERE category_id = %s
@@ -92,15 +246,13 @@ def add_order():
             category = cur.fetchone()
             category_name = category['category_name'] if category else "Uncategorized"
             
-            # 3. Create order with 'requested' status
             cur.execute("""
                 INSERT INTO orders (distributor_id, order_date, status, total_amount)
-                VALUES (%s, NOW(), 'requested', %s)
+                VALUES (%s, NOW(), 'pending', %s)
             """, (distributor_id, subtotal))
             
             order_id = cur.lastrowid
             
-            # 4. Insert into order_items
             cur.execute("""
                 INSERT INTO order_items 
                 (order_id, product_id, category_id, product_name, category_name, 
@@ -120,7 +272,6 @@ def add_order():
         finally:
             cur.close()
 
-    # GET request - show form
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cur.execute("SELECT category_id, category_name FROM category ORDER BY category_name")
     categories = cur.fetchall()
@@ -134,14 +285,13 @@ def update_order(order_id):
     distributor_id = session.get('distributor_id')
     if not distributor_id:
         flash("Please log in first", "error")
-        return redirect(url_for('distributor_order_bp.distributor_login'))
+        return redirect(url_for('distributor_bp.login'))
 
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
-    # Get order and check if it can be updated (only requested orders)
     cur.execute("""
         SELECT * FROM orders 
-        WHERE order_id = %s AND distributor_id = %s AND status = 'requested'
+        WHERE order_id = %s AND distributor_id = %s AND status = 'pending'
     """, (order_id, distributor_id))
     order = cur.fetchone()
     
@@ -151,14 +301,12 @@ def update_order(order_id):
         return redirect(url_for('distributor_order_bp.manage_orders'))
 
     if request.method == "POST":
-        # Get form data
         category_id = request.form.get("category_id")
         product_id = request.form.get("product_id")
         quantity = int(request.form.get("quantity", 1))
         variant_size = request.form.get("variant_size", "")
         
         try:
-            # 1. Get product price
             cur.execute("""
                 SELECT unit_price, product_name FROM products 
                 WHERE product_id = %s
@@ -173,7 +321,6 @@ def update_order(order_id):
             product_name = product['product_name']
             subtotal = unit_price * quantity
             
-            # 2. Get category name
             cur.execute("""
                 SELECT category_name FROM category 
                 WHERE category_id = %s
@@ -181,14 +328,12 @@ def update_order(order_id):
             category = cur.fetchone()
             category_name = category['category_name'] if category else "Uncategorized"
             
-            # 3. Update order total
             cur.execute("""
                 UPDATE orders 
                 SET total_amount = %s 
                 WHERE order_id = %s
             """, (subtotal, order_id))
             
-            # 4. Update order item
             cur.execute("""
                 UPDATE order_items 
                 SET product_id = %s, 
@@ -214,19 +359,15 @@ def update_order(order_id):
         finally:
             cur.close()
     
-    # GET request - show form
-    # Get current order item details
     cur.execute("""
         SELECT * FROM order_items 
         WHERE order_id = %s
     """, (order_id,))
     order_item = cur.fetchone()
     
-    # Get categories
     cur.execute("SELECT category_id, category_name FROM category ORDER BY category_name")
     categories = cur.fetchall()
     
-    # Get current category products
     current_category_id = order_item['category_id'] if order_item else None
     products = []
     if current_category_id:
@@ -245,24 +386,23 @@ def update_order(order_id):
                          categories=categories, 
                          products=products)
 
-# Route to cancel a requested order
+# Route to cancel an order
 @distributor_order_bp.route('/cancel_order/<int:order_id>', methods=["POST"])
 def cancel_order(order_id):
     distributor_id = session.get('distributor_id')
     if not distributor_id:
         flash("Please log in first", "error")
-        return redirect(url_for('distributor_order_bp.distributor_login'))
+        return redirect(url_for('distributor_bp.login'))
 
     cur = mysql.connection.cursor()
     
     try:
-        # Check if order belongs to distributor and is in 'requested' status
         cur.execute("""
             UPDATE orders 
             SET status = 'cancelled' 
             WHERE order_id = %s 
             AND distributor_id = %s 
-            AND status = 'requested'
+            AND status = 'pending'
         """, (order_id, distributor_id))
         
         if cur.rowcount == 0:
@@ -285,11 +425,10 @@ def order_details(order_id):
     distributor_id = session.get('distributor_id')
     if not distributor_id:
         flash("Please log in first", "error")
-        return redirect(url_for('distributor_order_bp.distributor_login'))
+        return redirect(url_for('distributor_bp.login'))
 
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
-    # Get order info
     cur.execute("""
         SELECT * FROM orders 
         WHERE order_id = %s AND distributor_id = %s
@@ -300,7 +439,6 @@ def order_details(order_id):
         flash("Order not found", "error")
         return redirect(url_for('distributor_order_bp.manage_orders'))
     
-    # Get order items
     cur.execute("""
         SELECT * FROM order_items 
         WHERE order_id = %s
@@ -324,46 +462,3 @@ def get_products(category_id):
     cur.close()
     
     return jsonify({'products': products})
-
-# Route to get products for update form (different from get_products)
-@distributor_order_bp.route('/get_products_for_update/<category_id>', methods=['GET'])
-def get_products_for_update(category_id):
-    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cur.execute("""
-        SELECT product_id, product_name, unit_price 
-        FROM products 
-        WHERE category_id = %s
-    """, (category_id,))
-    products = cur.fetchall()
-    cur.close()
-    
-    return jsonify({'products': products})
-
-# Login route for distributor (if needed)
-@distributor_order_bp.route('/login', methods=['GET', 'POST'])
-def distributor_login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
-        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cur.execute("SELECT * FROM distributors WHERE email = %s", (email,))
-        distributor = cur.fetchone()
-        cur.close()
-        
-        if distributor and bcrypt.check_password_hash(distributor['password_hash'], password):
-            session['distributor_id'] = distributor['distributor_id']
-            session['distributor_name'] = distributor['name']
-            flash('Login successful!', 'success')
-            return redirect(url_for('distributor_order_bp.manage_orders'))
-        else:
-            flash('Invalid email or password', 'error')
-    
-    return render_template('login.html')
-
-# Logout route
-@distributor_order_bp.route('/logout')
-def distributor_logout():
-    session.clear()
-    flash('You have been logged out', 'info')
-    return redirect(url_for('distributor_order_bp.distributor_login'))

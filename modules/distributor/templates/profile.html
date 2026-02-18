@@ -1,0 +1,643 @@
+{% extends "distributor_base.html" %}
+
+{% block title %}My Profile - Golden Bee{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block breadcrumb %}Account / My Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-wrap {
+        max-width: 780px;
+        margin: 0 auto;
+    }
+
+    /* ── Banner ── */
+    .prof-banner {
+        background: var(--white);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .prof-banner-bg {
+        height: 100px;
+        background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        position: relative; overflow: hidden;
+    }
+
+    .prof-banner-bg::before {
+        content: '';
+        position: absolute; inset: 0;
+        background: repeating-linear-gradient(
+            45deg,
+            rgba(253,176,34,0.06) 0px, rgba(253,176,34,0.06) 1px,
+            transparent 1px, transparent 28px
+        );
+    }
+
+    .prof-banner-bg::after {
+        content: '';
+        position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #FDB022, #FFD54F, #FDB022);
+        background-size: 200% 100%;
+        animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+        0%   { background-position: -200% 0; }
+        100% { background-position:  200% 0; }
+    }
+
+    .prof-banner-body {
+        display: flex; align-items: flex-end; gap: 18px;
+        padding: 0 28px 22px;
+        margin-top: -46px;
+    }
+
+    /* Avatar */
+    .prof-avatar {
+        width: 92px; height: 92px;
+        border-radius: 50%;
+        border: 4px solid var(--white);
+        box-shadow: 0 4px 16px rgba(253,176,34,0.3);
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 34px; font-weight: 700; color: #1F2937;
+        flex-shrink: 0; overflow: hidden;
+    }
+
+    .prof-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .prof-banner-info { flex: 1; padding-bottom: 4px; }
+
+    .prof-name {
+        font-size: 20px; font-weight: 700;
+        color: var(--text-primary); margin: 0 0 6px;
+    }
+
+    .prof-meta { display: flex; flex-wrap: wrap; gap: 14px; }
+
+    .prof-chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 12px; font-weight: 500; color: var(--text-secondary);
+    }
+
+    .prof-chip i { color: var(--primary-yellow); font-size: 11px; }
+
+    /* ── Tabs ── */
+    .prof-tabs {
+        display: flex; gap: 0;
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .prof-tab {
+        flex: 1; padding: 14px 10px;
+        border: none; background: transparent;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px; font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer; transition: all 0.2s ease;
+        display: flex; align-items: center; justify-content: center; gap: 7px;
+        border-right: 1px solid var(--border-color);
+        position: relative;
+    }
+
+    .prof-tab:last-child { border-right: none; }
+
+    .prof-tab::after {
+        content: '';
+        position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+        background: var(--primary-yellow);
+        transform: scaleX(0);
+        transition: transform 0.2s ease;
+    }
+
+    .prof-tab.active {
+        background: #FFFBF2;
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .prof-tab.active::after { transform: scaleX(1); }
+    .prof-tab:hover:not(.active) { background: #F9FAFB; color: var(--text-primary); }
+
+    .prof-tab i { font-size: 14px; }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ── Card ── */
+    .prof-card {
+        background: var(--white);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+        overflow: hidden;
+    }
+
+    .prof-card-head {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-color);
+        background: #F9FAFB;
+        display: flex; align-items: center; gap: 9px;
+    }
+
+    .prof-card-head-icon {
+        width: 30px; height: 30px; border-radius: 7px;
+        background: #FEF3C7;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; color: #D97706;
+    }
+
+    .prof-card-head h3 {
+        font-size: 14px; font-weight: 600;
+        color: var(--text-primary); margin: 0;
+    }
+
+    .prof-card-body { padding: 24px; }
+
+    /* ── Info Grid (Profile Info tab) ── */
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+    }
+
+    .info-cell {
+        padding: 16px 20px;
+        border-bottom: 1px solid #F3F4F6;
+        border-right: 1px solid #F3F4F6;
+    }
+
+    .info-cell:nth-child(even) { border-right: none; }
+    .info-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+    /* last row: if odd number of cells */
+    .info-cell.full-width {
+        grid-column: 1 / -1;
+        border-right: none;
+    }
+
+    .info-cell:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+        border-right: none;
+    }
+
+    .info-cell-label {
+        font-size: 10.5px; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.08em;
+        color: var(--text-light); margin-bottom: 4px;
+        display: flex; align-items: center; gap: 5px;
+    }
+
+    .info-cell-label i { color: var(--primary-yellow); font-size: 10px; }
+
+    .info-cell-value {
+        font-size: 14px; font-weight: 500; color: var(--text-primary);
+    }
+
+    .info-cell-value.empty {
+        color: var(--text-light); font-style: italic; font-weight: 400;
+    }
+
+    /* status badge inline */
+    .badge-active {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 2px 10px; border-radius: 20px;
+        font-size: 11px; font-weight: 600;
+        background: #D1FAE5; color: #065F46;
+        border: 1px solid #A7F3D0;
+    }
+
+    /* ── Edit Form ── */
+    .form-grid-2 {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group:last-child { margin-bottom: 0; }
+
+    .form-label {
+        font-size: 12px; font-weight: 600;
+        color: var(--text-secondary);
+        display: block; margin-bottom: 6px;
+    }
+
+    .form-label .req { color: #EF4444; margin-left: 2px; }
+    .form-label .opt { color: var(--text-light); font-weight: 400; font-size: 11px; }
+
+    .form-input, .form-textarea {
+        font-family: 'Inter', sans-serif;
+        font-size: 14px; color: var(--text-primary);
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 13px; width: 100%;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-light); }
+
+    .form-input:focus, .form-textarea:focus {
+        outline: none;
+        border-color: #FDB022;
+        box-shadow: 0 0 0 3px rgba(253,176,34,0.12);
+    }
+
+    .form-textarea { resize: vertical; min-height: 80px; }
+
+    .form-divider { border: none; border-top: 1px solid #F3F4F6; margin: 20px 0; }
+
+    .form-actions { display: flex; gap: 10px; }
+
+    /* Upload */
+    .upload-zone {
+        border: 2px dashed var(--border-color);
+        border-radius: 8px; padding: 22px;
+        text-align: center; cursor: pointer;
+        background: #F9FAFB; position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .upload-zone:hover { border-color: #FDB022; background: #FFFBF0; }
+    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-zone i { font-size: 22px; color: var(--text-light); display: block; margin-bottom: 6px; }
+    .upload-zone p { font-size: 13px; color: var(--text-secondary); margin: 0 0 3px; }
+    .upload-zone small { font-size: 11px; color: var(--text-light); }
+
+    /* Buttons */
+    .btn-save {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 10px 22px;
+        background: linear-gradient(135deg, #FDB022, #FFD54F);
+        border: none; border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px; font-weight: 600; color: #1F2937;
+        cursor: pointer; transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(253,176,34,0.22);
+    }
+
+    .btn-save:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(253,176,34,0.35); }
+
+    .btn-cancel {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 10px 20px;
+        background: var(--white); border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px; font-weight: 500; color: var(--text-secondary);
+        cursor: pointer; transition: all 0.2s ease;
+    }
+
+    .btn-cancel:hover { border-color: #9CA3AF; color: var(--text-primary); }
+
+    /* ── Password tab ── */
+    .pw-meter { height: 4px; border-radius: 2px; background: #F3F4F6; margin-top: 7px; overflow: hidden; }
+    .pw-bar { height: 100%; border-radius: 2px; width: 0; transition: width 0.3s ease; }
+    .pw-bar.weak   { width: 33%; background: #EF4444; }
+    .pw-bar.medium { width: 66%; background: #FDB022; }
+    .pw-bar.strong { width: 100%; background: #10B981; }
+    .pw-hint { font-size: 11px; color: var(--text-secondary); margin-top: 5px; }
+
+    @media (max-width: 640px) {
+        .info-grid { grid-template-columns: 1fr; }
+        .info-cell { border-right: none; }
+        .info-cell:nth-last-child(-n+2) { border-bottom: 1px solid #F3F4F6; }
+        .info-cell:last-child { border-bottom: none; }
+        .form-grid-2 { grid-template-columns: 1fr; }
+        .prof-banner-body { flex-wrap: wrap; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-wrap">
+
+    <!-- ── Banner ── -->
+    <div class="prof-banner">
+        <div class="prof-banner-bg"></div>
+        <div class="prof-banner-body">
+
+            <div class="prof-avatar">
+                {% if distributor.distributor_image %}
+                    <img src="{{ url_for('static', filename='uploads/distributors/' ~ distributor.distributor_image) }}"
+                         alt="Profile Photo">
+                {% else %}
+                    {{ distributor.distributor_name[0].upper() if distributor.distributor_name else 'D' }}
+                {% endif %}
+            </div>
+
+            <div class="prof-banner-info">
+                <h2 class="prof-name">{{ distributor.distributor_name }}</h2>
+                <div class="prof-meta">
+                    {% if distributor.owner_name %}
+                        <span class="prof-chip"><i class="fas fa-user-tie"></i> {{ distributor.owner_name }}</span>
+                    {% endif %}
+                    {% if distributor.district or distributor.province %}
+                        <span class="prof-chip">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ [distributor.district, distributor.province] | select | join(', ') }}
+                        </span>
+                    {% endif %}
+                    {% if distributor.contact_no %}
+                        <span class="prof-chip"><i class="fas fa-phone"></i> {{ distributor.contact_no }}</span>
+                    {% endif %}
+                    <span class="prof-chip"><i class="fas fa-envelope"></i> {{ distributor.email }}</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Tabs ── -->
+    <div class="prof-tabs">
+        <button class="prof-tab active" onclick="switchTab('info', this)">
+            <i class="fas fa-id-card"></i> Profile Info
+        </button>
+        <button class="prof-tab" onclick="switchTab('edit', this)">
+            <i class="fas fa-pen"></i> Edit Profile
+        </button>
+        <button class="prof-tab" onclick="switchTab('password', this)">
+            <i class="fas fa-lock"></i> Change Password
+        </button>
+    </div>
+
+    <!-- ── TAB: Profile Info ── -->
+    <div class="tab-pane active prof-card" id="tab-info">
+        <div class="prof-card-head">
+            <div class="prof-card-head-icon"><i class="fas fa-id-card"></i></div>
+            <h3>Account Details</h3>
+        </div>
+        <div class="info-grid">
+
+            <div class="info-cell">
+                <div class="info-cell-label"><i class="fas fa-hashtag"></i> Distributor ID</div>
+                <div class="info-cell-value">#{{ distributor.distributor_id }}</div>
+            </div>
+
+            <div class="info-cell">
+                <div class="info-cell-label"><i class="fas fa-circle-check"></i> Account Status</div>
+                <div class="info-cell-value">
+                    <span class="badge-active">
+                        <i class="fas fa-circle" style="font-size:6px;"></i> Active
+                    </span>
+                </div>
+            </div>
+
+            <div class="info-cell">
+                <div class="info-cell-label"><i class="fas fa-store"></i> Business Name</div>
+                <div class="info-cell-value">{{ distributor.distributor_name }}</div>
+            </div>
+
+            <div class="info-cell">
+                <div class="info-cell-label"><i class="fas fa-user-tie"></i> Owner Name</div>
+                <div class="info-cell-value {{ 'empty' if not distributor.owner_name }}">
+                    {{ distributor.owner_name or 'Not provided' }}
+                </div>
+            </div>
+
+            <div class="info-cell">
+                <div class="info-cell-label"><i class="fas fa-envelope"></i> Email Address</div>
+                <div class="info-cell-value">{{ distributor.email }}</div>
+            </div>
+
+            <div class="info-cell">
+                <div class="info-cell-label"><i class="fas fa-phone-alt"></i> Contact Number</div>
+                <div class="info-cell-value {{ 'empty' if not distributor.contact_no }}">
+                    {{ distributor.contact_no or 'Not provided' }}
+                </div>
+            </div>
+
+            <div class="info-cell">
+                <div class="info-cell-label"><i class="fas fa-map"></i> District / Province</div>
+                <div class="info-cell-value {{ 'empty' if not distributor.district and not distributor.province }}">
+                    {% set loc = [distributor.district, distributor.province] | select | list %}
+                    {{ loc | join(', ') if loc else 'Not provided' }}
+                </div>
+            </div>
+
+            <div class="info-cell">
+                <div class="info-cell-label"><i class="fas fa-calendar-alt"></i> Member Since</div>
+                <div class="info-cell-value">
+                    {% if distributor.created_at %}
+                        {{ distributor.created_at.strftime('%d %B %Y') }}
+                    {% else %}—{% endif %}
+                </div>
+            </div>
+
+            <div class="info-cell" style="grid-column: 1 / -1; border-bottom: none;">
+                <div class="info-cell-label"><i class="fas fa-map-marker-alt"></i> Address</div>
+                <div class="info-cell-value {{ 'empty' if not distributor.address }}">
+                    {{ distributor.address or 'Not provided' }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── TAB: Edit Profile ── -->
+    <div class="tab-pane prof-card" id="tab-edit">
+        <div class="prof-card-head">
+            <div class="prof-card-head-icon"><i class="fas fa-pen"></i></div>
+            <h3>Edit Profile</h3>
+        </div>
+        <div class="prof-card-body">
+            <form method="POST"
+                  action="{{ url_for('distributor_profile_bp.edit_profile') }}"
+                  enctype="multipart/form-data">
+
+                <div class="form-grid-2">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Business Name <span class="req">*</span></label>
+                        <input type="text" class="form-input" name="distributor_name"
+                               value="{{ distributor.distributor_name }}" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Owner Name <span class="opt">(optional)</span></label>
+                        <input type="text" class="form-input" name="owner_name"
+                               value="{{ distributor.owner_name or '' }}" placeholder="Full name">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">District</label>
+                        <input type="text" class="form-input" name="district"
+                               value="{{ distributor.district or '' }}" placeholder="e.g. Colombo">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Province</label>
+                        <input type="text" class="form-input" name="province"
+                               value="{{ distributor.province or '' }}" placeholder="e.g. Western">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Contact Number</label>
+                        <input type="text" class="form-input" name="contact_no"
+                               value="{{ distributor.contact_no or '' }}" placeholder="+94 77 000 0000">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Address</label>
+                        <input type="text" class="form-input" name="address"
+                               value="{{ distributor.address or '' }}" placeholder="Full business address">
+                    </div>
+                </div>
+
+                <hr class="form-divider">
+
+                <div class="form-group">
+                    <label class="form-label">Profile Photo <span class="opt">(optional)</span></label>
+                    <div class="upload-zone" id="uploadZone">
+                        <input type="file" name="distributor_image" accept="image/*"
+                               onchange="previewImage(this)">
+                        <div id="uploadDefault">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click or drag to upload a photo</p>
+                            <small>PNG, JPG, WEBP · Max 5MB</small>
+                        </div>
+                        <div id="uploadPreview" style="display:none;">
+                            <img id="previewImg" src="" alt=""
+                                 style="max-height:80px; border-radius:6px; margin: 0 auto 6px; display:block;">
+                            <small id="previewName" style="color:var(--text-secondary);"></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button type="button" class="btn-cancel"
+                            onclick="switchTab('info', document.querySelector('.prof-tab'))">
+                        Cancel
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- ── TAB: Change Password ── -->
+    <div class="tab-pane prof-card" id="tab-password">
+        <div class="prof-card-head">
+            <div class="prof-card-head-icon"><i class="fas fa-lock"></i></div>
+            <h3>Change Password</h3>
+        </div>
+        <div class="prof-card-body">
+            <form method="POST" action="{{ url_for('distributor_profile_bp.change_password') }}">
+
+                <div class="form-group">
+                    <label class="form-label">Current Password <span class="req">*</span></label>
+                    <input type="password" class="form-input" name="current_password"
+                           placeholder="Enter your current password" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">New Password <span class="req">*</span></label>
+                    <input type="password" class="form-input" name="new_password"
+                           id="newPassword" placeholder="Minimum 8 characters"
+                           required oninput="checkStrength(this.value)">
+                    <div class="pw-meter"><div class="pw-bar" id="pwBar"></div></div>
+                    <div class="pw-hint" id="pwHint">Enter a new password</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Confirm Password <span class="req">*</span></label>
+                    <input type="password" class="form-input" name="confirm_password"
+                           id="confirmPassword" placeholder="Repeat new password"
+                           required oninput="checkMatch()">
+                    <div class="pw-hint" id="matchHint"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-key"></i> Update Password
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabId, clickedBtn) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.prof-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        clickedBtn.classList.add('active');
+    }
+
+    const EDIT_MODE = "{{ 'true' if edit_mode else 'false' }}" === "true";
+    if (EDIT_MODE) {
+        document.addEventListener('DOMContentLoaded', function () {
+            switchTab('edit', document.querySelectorAll('.prof-tab')[1]);
+        });
+    }
+
+    function previewImage(input) {
+        if (!input.files || !input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('uploadDefault').style.display = 'none';
+            document.getElementById('uploadPreview').style.display = 'block';
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('previewName').textContent = input.files[0].name;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    function checkStrength(val) {
+        const bar = document.getElementById('pwBar');
+        const hint = document.getElementById('pwHint');
+        bar.className = 'pw-bar';
+        if (!val) { hint.textContent = 'Enter a new password'; hint.style.color = ''; return; }
+        let score = 0;
+        if (val.length >= 8)          score++;
+        if (/[A-Z]/.test(val))        score++;
+        if (/[0-9]/.test(val))        score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        if (score <= 1) {
+            bar.classList.add('weak');
+            hint.textContent = '⚠ Weak — add uppercase, numbers or symbols';
+            hint.style.color = '#EF4444';
+        } else if (score <= 2) {
+            bar.classList.add('medium');
+            hint.textContent = '~ Medium — getting better';
+            hint.style.color = '#D97706';
+        } else {
+            bar.classList.add('strong');
+            hint.textContent = '✓ Strong password';
+            hint.style.color = '#059669';
+        }
+        checkMatch();
+    }
+
+    function checkMatch() {
+        const np = document.getElementById('newPassword').value;
+        const cp = document.getElementById('confirmPassword').value;
+        const hint = document.getElementById('matchHint');
+        if (!cp) { hint.textContent = ''; return; }
+        if (np === cp) {
+            hint.textContent = '✓ Passwords match';
+            hint.style.color = '#059669';
+        } else {
+            hint.textContent = '✗ Passwords do not match';
+            hint.style.color = '#EF4444';
+        }
+    }
+</script>
+{% endblock %}

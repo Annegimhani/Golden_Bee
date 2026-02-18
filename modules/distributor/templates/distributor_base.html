@@ -101,6 +101,7 @@
         /* Navigation Menu */
         .nav-menu {
             padding: 20px 0;
+            padding-bottom: 100px;
         }
 
         .nav-section {
@@ -432,14 +433,8 @@
         }
 
         @keyframes slideInDown {
-            from {
-                transform: translateY(-10px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(-10px); opacity: 0; }
+            to   { transform: translateY(0);     opacity: 1; }
         }
 
         .flash-success {
@@ -521,22 +516,10 @@
         }
 
         /* Scrollbar */
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -546,6 +529,7 @@
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
+
         <!-- Logo Section -->
         <div class="sidebar-header">
             <div class="logo-container">
@@ -556,9 +540,11 @@
 
         <!-- Navigation Menu -->
         <nav class="nav-menu">
-            <!-- Main Section -->
+
+            <!-- ── Main ──────────────────────────────────────────────────── -->
             <div class="nav-section">
                 <div class="nav-section-title">Main</div>
+
                 <div class="nav-item {% if request.endpoint == 'distributor_bp.dashboard' %}active{% endif %}">
                     <a href="{{ url_for('distributor_bp.dashboard') }}" class="nav-link">
                         <span class="nav-icon"><i class="fas fa-home"></i></span>
@@ -567,10 +553,10 @@
                 </div>
             </div>
 
-            <!-- Orders Section -->
+            <!-- ── Orders ────────────────────────────────────────────────── -->
             <div class="nav-section">
                 <div class="nav-section-title">Orders</div>
-                
+
                 <div class="nav-item {% if 'browse' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('distributor_bp.browse_products') }}" class="nav-link">
                         <span class="nav-icon"><i class="fas fa-shopping-bag"></i></span>
@@ -586,24 +572,40 @@
                 </div>
             </div>
 
-            <!-- Inventory Section -->
+            <!-- ── Inventory ──────────────────────────────────────────────── -->
             <div class="nav-section">
                 <div class="nav-section-title">Inventory</div>
-                
+
                 <div class="nav-item {% if 'my_stock' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('distributor_stock_bp.my_stock') }}" class="nav-link">
                         <span class="nav-icon"><i class="fas fa-warehouse"></i></span>
                         <span class="nav-text">My Stock</span>
                     </a>
                 </div>
+
+                <!-- ✅ Sell Products -->
+                <div class="nav-item {% if 'manage_sales' in request.endpoint or 'sell_product' in request.endpoint or 'sale_detail' in request.endpoint or 'update_sale' in request.endpoint %}active{% endif %}">
+                    <a href="{{ url_for('distributor_sell_bp.manage_sales') }}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-cash-register"></i></span>
+                        <span class="nav-text">Sell Products</span>
+                    </a>
+                </div>
+
+                <!-- ✅ Return Stock -->
+                <div class="nav-item {% if 'return_stock' in request.endpoint %}active{% endif %}">
+                    <a href="{{ url_for('distributor_return_stock.return_stock') }}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-undo-alt"></i></span>
+                        <span class="nav-text">Return Stock</span>
+                    </a>
+                </div>
             </div>
 
-            <!-- Account Section -->
+            <!-- ── Account ────────────────────────────────────────────────── -->
             <div class="nav-section">
                 <div class="nav-section-title">Account</div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
+
+                <div class="nav-item {% if 'view_profile' in request.endpoint %}active{% endif %}">
+                    <a href="{{ url_for('distributor_profile_bp.view_profile') }}" class="nav-link">
                         <span class="nav-icon"><i class="fas fa-user-circle"></i></span>
                         <span class="nav-text">My Profile</span>
                     </a>
@@ -616,6 +618,7 @@
                     </a>
                 </div>
             </div>
+
         </nav>
 
         <!-- User Section -->
@@ -634,6 +637,7 @@
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
+
         <!-- Top Bar -->
         <div class="topbar">
             <div class="topbar-left">
@@ -672,6 +676,7 @@
 
         <!-- Content Container -->
         <div class="content-container">
+
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -692,25 +697,19 @@
     </main>
 
     <script>
-        // Toggle Sidebar for Mobile
         function toggleMobileSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.querySelector('.overlay');
-            
             sidebar.classList.toggle('mobile-open');
             overlay.classList.toggle('active');
         }
 
-        // Close mobile sidebar when clicking a link
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
-                    toggleMobileSidebar();
-                }
+                if (window.innerWidth <= 768) toggleMobileSidebar();
             });
         });
 
-        // Auto-hide flash messages
         document.addEventListener('DOMContentLoaded', function() {
             const flashMessages = document.querySelectorAll('.flash-message');
             flashMessages.forEach(message => {
@@ -720,24 +719,16 @@
                 }, 5000);
             });
 
-            // Add slideOutUp animation
             const style = document.createElement('style');
             style.textContent = `
                 @keyframes slideOutUp {
-                    from {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                    to {
-                        transform: translateY(-10px);
-                        opacity: 0;
-                    }
+                    from { transform: translateY(0); opacity: 1; }
+                    to   { transform: translateY(-10px); opacity: 0; }
                 }
             `;
             document.head.appendChild(style);
         });
 
-        // Close flash message on click
         document.querySelectorAll('.flash-message').forEach(message => {
             message.style.cursor = 'pointer';
             message.addEventListener('click', function() {

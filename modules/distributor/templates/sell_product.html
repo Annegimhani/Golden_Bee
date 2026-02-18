@@ -1,0 +1,412 @@
+{% extends "distributor_base.html" %}
+
+{% block title %}Record Sale — Golden Bee{% endblock %}
+{% block breadcrumb %}Sales / Record New Sale{% endblock %}
+{% block page_title %}Record New Sale{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --gold:       #FDB022;
+    --gold-light: #FFF3CD;
+    --gold-dark:  #E69A0E;
+    --green:      #10B981;
+    --red:        #EF4444;
+    --radius:     12px;
+    --shadow-sm:  0 1px 3px rgba(0,0,0,.08);
+    --shadow-md:  0 4px 12px rgba(0,0,0,.10);
+  }
+
+  .page-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ── Form Card ── */
+  .form-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .form-card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .form-card-icon {
+    width: 44px; height: 44px;
+    background: var(--gold-light);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: var(--gold-dark);
+  }
+  .form-card-title { font-size: 16px; font-weight: 700; color: #111827; }
+  .form-card-sub   { font-size: 12px; color: #6B7280; }
+  .form-card-body  { padding: 28px 24px; }
+
+  /* ── Fields ── */
+  .form-section {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #F3F4F6;
+  }
+  .form-section:last-child { border-bottom: none; margin-bottom: 0; }
+  .section-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: #9CA3AF; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: #F3F4F6;
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 13px; font-weight: 600; color: #374151;
+  }
+  label .required { color: var(--red); margin-left: 2px; }
+
+  .form-control {
+    height: 44px;
+    padding: 0 14px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #111827;
+    background: #F9FAFB;
+    outline: none;
+    transition: all .2s;
+    width: 100%;
+  }
+  textarea.form-control {
+    height: auto; padding: 12px 14px; resize: vertical; min-height: 90px;
+  }
+  .form-control:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(253,176,34,.15);
+    background: #fff;
+  }
+  .form-control:disabled {
+    background: #F3F4F6; color: #9CA3AF; cursor: not-allowed;
+  }
+
+  .field-hint { font-size: 11px; color: #9CA3AF; }
+
+  /* ── Stock Selector ── */
+  .stock-select-wrapper { position: relative; }
+  .stock-select-wrapper::after {
+    content: '\f0d7';
+    font-family: 'Font Awesome 6 Free'; font-weight: 900;
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: #9CA3AF; pointer-events: none;
+  }
+  select.form-control { appearance: none; padding-right: 36px; cursor: pointer; }
+
+  /* ── Stock Info Panel ── */
+  .stock-info-panel {
+    background: var(--gold-light);
+    border: 1.5px solid #FDE68A;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 12px;
+    display: none;
+  }
+  .stock-info-panel.visible { display: block; }
+  .stock-info-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .stock-info-label { font-size: 11px; font-weight: 600; color: #92400E; }
+  .stock-info-value { font-size: 16px; font-weight: 700; color: #78350F; }
+
+  /* ── Summary Card ── */
+  .summary-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    position: sticky; top: 20px;
+    overflow: hidden;
+  }
+  .summary-header {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    padding: 20px;
+    color: #1F2937;
+  }
+  .summary-header h3 { font-size: 16px; font-weight: 700; }
+  .summary-header p  { font-size: 12px; opacity: .7; margin-top: 2px; }
+  .summary-body { padding: 20px; }
+  .summary-row {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 10px 0;
+    border-bottom: 1px solid #F3F4F6;
+    font-size: 14px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-label { color: #6B7280; }
+  .summary-value { font-weight: 600; color: #111827; }
+  .summary-total {
+    margin-top: 16px; padding: 16px;
+    background: #F0FDF4;
+    border-radius: 10px; border: 1.5px solid #D1FAE5;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .summary-total-label { font-size: 14px; font-weight: 700; color: #065F46; }
+  .summary-total-value { font-size: 24px; font-weight: 800; color: var(--green); }
+
+  /* ── Buttons ── */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 0 20px; height: 44px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: none; transition: all .2s; }
+  .btn-primary { background: var(--gold); color: #1F2937; width: 100%; justify-content: center; }
+  .btn-primary:hover { background: var(--gold-dark); box-shadow: 0 0 20px rgba(253,176,34,.4); }
+  .btn-outline { background: #fff; color: #6B7280; border: 1.5px solid #E5E7EB; }
+  .btn-outline:hover { background: #F9FAFB; }
+
+  /* ── Status Radio ── */
+  .status-group { display: flex; gap: 10px; flex-wrap: wrap; }
+  .status-option { display: none; }
+  .status-label {
+    padding: 8px 16px; border-radius: 8px;
+    border: 1.5px solid #E5E7EB;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all .2s; color: #6B7280;
+  }
+  .status-option:checked + .status-label {
+    background: var(--gold-light); border-color: var(--gold); color: var(--gold-dark);
+  }
+
+  .alert-danger { background: #FEE2E2; color: #991B1B; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: flex; gap: 8px; align-items: center; }
+
+  @media (max-width: 900px) {
+    .page-grid { grid-template-columns: 1fr; }
+    .summary-card { position: static; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:20px;">
+  <a href="{{ url_for('distributor_sell_bp.manage_sales') }}" class="btn btn-outline" style="height:36px; padding:0 14px; font-size:13px;">
+    <i class="fas fa-arrow-left"></i> Back to Sales
+  </a>
+</div>
+
+<form method="POST" id="saleForm">
+<div class="page-grid">
+
+  <!-- Left: Form -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon"><i class="fas fa-cash-register"></i></div>
+      <div>
+        <div class="form-card-title">Sale Details</div>
+        <div class="form-card-sub">Fill in the information below to record a sale</div>
+      </div>
+    </div>
+    <div class="form-card-body">
+
+      <!-- Product Section -->
+      <div class="form-section">
+        <div class="section-label"><i class="fas fa-box"></i> Product</div>
+        <div class="form-group">
+          <label for="stock_id">Select Stock Item <span class="required">*</span></label>
+          <div class="stock-select-wrapper">
+            <select class="form-control" name="stock_id" id="stock_id" required onchange="onStockChange(this)">
+              <option value="">— Choose a product from your stock —</option>
+              {% for item in stock_items %}
+              <option value="{{ item[0] }}"
+                      data-qty="{{ item[2] }}"
+                      data-price="{{ item[3] }}"
+                      data-variant="{{ item[4] or '' }}"
+                      data-category="{{ item[5] or '' }}">
+                {{ item[1] }}{% if item[4] %} ({{ item[4] }}){% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% if not stock_items %}
+          <div class="alert-danger"><i class="fas fa-exclamation-circle"></i> No stock available. Please add stock first.</div>
+          {% endif %}
+        </div>
+
+        <!-- Stock Info -->
+        <div class="stock-info-panel" id="stockInfoPanel">
+          <div class="stock-info-grid">
+            <div class="stock-info-item">
+              <div class="stock-info-label">Category</div>
+              <div class="stock-info-value" id="infoCategory">—</div>
+            </div>
+            <div class="stock-info-item">
+              <div class="stock-info-label">Available</div>
+              <div class="stock-info-value" id="infoQty">—</div>
+            </div>
+            <div class="stock-info-item">
+              <div class="stock-info-label">Unit Price</div>
+              <div class="stock-info-value" id="infoPrice">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quantity & Price -->
+      <div class="form-section">
+        <div class="section-label"><i class="fas fa-calculator"></i> Quantity & Pricing</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantity_sold">Quantity Sold <span class="required">*</span></label>
+            <input class="form-control" type="number" name="quantity_sold" id="quantity_sold"
+                   min="1" value="1" required oninput="recalculate()">
+            <span class="field-hint" id="qtyHint">Enter quantity to sell</span>
+          </div>
+          <div class="form-group">
+            <label for="unit_price">Unit Price (LKR) <span class="required">*</span></label>
+            <input class="form-control" type="number" step="0.01" name="unit_price" id="unit_price"
+                   min="0" value="0.00" required oninput="recalculate()">
+            <span class="field-hint">You may override the default price</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Info -->
+      <div class="form-section">
+        <div class="section-label"><i class="fas fa-user"></i> Customer Information</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="customer_name">Customer Name</label>
+            <input class="form-control" type="text" name="customer_name" id="customer_name"
+                   placeholder="e.g. John Perera">
+          </div>
+          <div class="form-group">
+            <label for="customer_contact">Contact Number</label>
+            <input class="form-control" type="text" name="customer_contact" id="customer_contact"
+                   placeholder="e.g. 077 123 4567">
+          </div>
+        </div>
+      </div>
+
+      <!-- Status & Notes -->
+      <div class="form-section">
+        <div class="section-label"><i class="fas fa-info-circle"></i> Additional Details</div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label>Sale Status <span class="required">*</span></label>
+          <div class="status-group">
+            <input type="radio" class="status-option" name="status" id="st_completed" value="completed" checked>
+            <label class="status-label" for="st_completed"><i class="fas fa-check-circle"></i> Completed</label>
+
+            <input type="radio" class="status-option" name="status" id="st_pending" value="pending">
+            <label class="status-label" for="st_pending"><i class="fas fa-clock"></i> Pending</label>
+
+            <input type="radio" class="status-option" name="status" id="st_cancelled" value="cancelled">
+            <label class="status-label" for="st_cancelled"><i class="fas fa-times-circle"></i> Cancelled</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea class="form-control" name="notes" id="notes"
+                    placeholder="Any additional notes about this sale…"></textarea>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Right: Summary -->
+  <div class="summary-card">
+    <div class="summary-header">
+      <h3><i class="fas fa-file-invoice-dollar"></i> Sale Summary</h3>
+      <p>Live calculation</p>
+    </div>
+    <div class="summary-body">
+      <div class="summary-row">
+        <span class="summary-label">Product</span>
+        <span class="summary-value" id="sumProduct">—</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Quantity</span>
+        <span class="summary-value" id="sumQty">1</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Unit Price</span>
+        <span class="summary-value" id="sumPrice">LKR 0.00</span>
+      </div>
+      <div class="summary-total">
+        <span class="summary-total-label">Total Amount</span>
+        <span class="summary-total-value" id="sumTotal">LKR 0.00</span>
+      </div>
+
+      <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
+        <button type="submit" class="btn btn-primary" {% if not stock_items %}disabled{% endif %}>
+          <i class="fas fa-cash-register"></i> Record Sale
+        </button>
+        <a href="{{ url_for('distributor_sell_bp.manage_sales') }}" class="btn btn-outline" style="justify-content:center;">
+          Cancel
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let maxQty = 999999;
+
+function onStockChange(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt.value) {
+    document.getElementById('stockInfoPanel').classList.remove('visible');
+    document.getElementById('sumProduct').textContent = '—';
+    return;
+  }
+  const qty   = parseInt(opt.dataset.qty);
+  const price = parseFloat(opt.dataset.price);
+  maxQty = qty;
+
+  document.getElementById('infoCategory').textContent = opt.dataset.category || '—';
+  document.getElementById('infoQty').textContent      = qty + ' units';
+  document.getElementById('infoPrice').textContent    = 'LKR ' + price.toFixed(2);
+  document.getElementById('stockInfoPanel').classList.add('visible');
+
+  document.getElementById('unit_price').value = price.toFixed(2);
+  document.getElementById('quantity_sold').max = qty;
+  document.getElementById('qtyHint').textContent = `Max available: ${qty} units`;
+  document.getElementById('sumProduct').textContent = opt.text.split('—')[0].trim();
+
+  recalculate();
+}
+
+function recalculate() {
+  const qty   = parseInt(document.getElementById('quantity_sold').value) || 0;
+  const price = parseFloat(document.getElementById('unit_price').value) || 0;
+  const total = qty * price;
+
+  document.getElementById('sumQty').textContent   = qty;
+  document.getElementById('sumPrice').textContent  = 'LKR ' + price.toFixed(2);
+  document.getElementById('sumTotal').textContent  = 'LKR ' + total.toLocaleString('en-LK', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  if (qty > maxQty && maxQty > 0) {
+    document.getElementById('quantity_sold').style.borderColor = '#EF4444';
+    document.getElementById('qtyHint').style.color = '#EF4444';
+    document.getElementById('qtyHint').textContent = `⚠ Exceeds stock! Max: ${maxQty}`;
+  } else {
+    document.getElementById('quantity_sold').style.borderColor = '';
+    document.getElementById('qtyHint').style.color = '';
+  }
+}
+
+document.getElementById('saleForm').addEventListener('submit', function(e) {
+  const qty = parseInt(document.getElementById('quantity_sold').value) || 0;
+  if (qty > maxQty && maxQty > 0) {
+    e.preventDefault();
+    alert(`Quantity exceeds available stock (${maxQty} units).`);
+  }
+});
+</script>
+{% endblock %}

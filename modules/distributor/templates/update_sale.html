@@ -1,0 +1,370 @@
+{% extends "distributor_base.html" %}
+
+{% block title %}Update Sale #{{ sale[0] }} — Golden Bee{% endblock %}
+{% block breadcrumb %}Sales / Edit Sale{% endblock %}
+{% block page_title %}Edit Sale{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --gold: #FDB022; --gold-light: #FFF3CD; --gold-dark: #E69A0E;
+    --green: #10B981; --green-light: #D1FAE5;
+    --red: #EF4444; --red-light: #FEE2E2;
+    --amber: #F59E0B; --amber-light: #FEF3C7;
+    --radius: 12px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+  }
+
+  .page-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* Form Card */
+  .form-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
+  .form-card-header {
+    padding: 20px 24px; border-bottom: 1px solid #E5E7EB;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .form-card-icon {
+    width: 44px; height: 44px; background: var(--gold-light); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--gold-dark);
+  }
+  .form-card-title { font-size: 16px; font-weight: 700; color: #111827; }
+  .form-card-sub   { font-size: 12px; color: #6B7280; }
+  .form-card-body  { padding: 28px 24px; }
+
+  /* Change notice */
+  .change-notice {
+    background: var(--amber-light); border: 1.5px solid #FDE68A;
+    border-radius: 10px; padding: 14px; margin-bottom: 20px;
+    display: flex; gap: 10px; align-items: flex-start;
+    font-size: 13px; color: #78350F;
+  }
+  .change-notice i { margin-top: 2px; color: var(--amber); }
+
+  .form-section {
+    margin-bottom: 28px; padding-bottom: 24px;
+    border-bottom: 1px solid #F3F4F6;
+  }
+  .form-section:last-child { border-bottom: none; margin-bottom: 0; }
+  .section-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: #9CA3AF; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: #F3F4F6; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  label { font-size: 13px; font-weight: 600; color: #374151; }
+  label .required { color: var(--red); margin-left: 2px; }
+
+  .form-control {
+    height: 44px; padding: 0 14px;
+    border: 1.5px solid #E5E7EB; border-radius: 8px;
+    font-size: 14px; color: #111827; background: #F9FAFB;
+    outline: none; transition: all .2s; width: 100%;
+  }
+  textarea.form-control { height: auto; padding: 12px 14px; resize: vertical; min-height: 90px; }
+  .form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(253,176,34,.15); background: #fff; }
+  .form-control.disabled { background: #F3F4F6; color: #9CA3AF; cursor: not-allowed; pointer-events: none; }
+  .field-hint { font-size: 11px; color: #9CA3AF; }
+
+  /* Status Radio */
+  .status-group { display: flex; gap: 10px; flex-wrap: wrap; }
+  .status-option { display: none; }
+  .status-label {
+    padding: 8px 16px; border-radius: 8px;
+    border: 1.5px solid #E5E7EB;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all .2s; color: #6B7280;
+  }
+  .status-option:checked + .status-label { background: var(--gold-light); border-color: var(--gold); color: var(--gold-dark); }
+
+  /* Original vs New */
+  .change-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; padding: 3px 8px;
+    border-radius: 6px; background: var(--gold-light); color: var(--gold-dark);
+  }
+
+  /* Summary Sidebar */
+  .summary-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; position: sticky; top: 20px; }
+  .summary-header { background: linear-gradient(135deg, #1F2937, #374151); padding: 20px; color: #fff; }
+  .summary-header h3 { font-size: 16px; font-weight: 700; }
+  .summary-header p  { font-size: 12px; opacity: .6; margin-top: 2px; }
+  .summary-body { padding: 20px; }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #F3F4F6; font-size: 13px; }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-label { color: #6B7280; }
+  .summary-value { font-weight: 600; color: #111827; }
+  .summary-old   { text-decoration: line-through; color: #9CA3AF; font-size: 12px; margin-left: 6px; }
+  .total-box { margin-top: 16px; padding: 16px; background: #F0FDF4; border-radius: 10px; border: 1.5px solid #D1FAE5; }
+  .total-box-label { font-size: 13px; font-weight: 700; color: #065F46; }
+  .total-box-value { font-size: 24px; font-weight: 800; color: var(--green); margin-top: 4px; }
+  .total-box-old   { font-size: 12px; color: #9CA3AF; text-decoration: line-through; }
+
+  /* Btns */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 0 20px; height: 44px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: none; transition: all .2s; }
+  .btn-primary { background: var(--gold); color: #1F2937; width: 100%; justify-content: center; }
+  .btn-primary:hover { background: var(--gold-dark); box-shadow: 0 0 20px rgba(253,176,34,.4); }
+  .btn-outline { background: #fff; color: #6B7280; border: 1.5px solid #E5E7EB; }
+  .btn-outline:hover { background: #F9FAFB; }
+  .btn-danger  { background: var(--red-light); color: var(--red); }
+  .btn-danger:hover  { background: var(--red); color: #fff; }
+
+  /* Original data card */
+  .original-card {
+    background: #F9FAFB; border: 1.5px dashed #E5E7EB;
+    border-radius: 10px; padding: 16px; margin-bottom: 16px;
+  }
+  .original-card-title { font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+  .original-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #F3F4F6; }
+  .original-row:last-child { border-bottom: none; }
+  .original-key { color: #6B7280; }
+  .original-val { font-weight: 600; color: #374151; }
+
+  @media (max-width: 900px) {
+    .page-grid { grid-template-columns: 1fr; }
+    .summary-card { position: static; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:20px; display:flex; gap:10px;">
+  <a href="{{ url_for('distributor_sell_bp.manage_sales') }}" class="btn btn-outline" style="height:36px; padding:0 14px; font-size:13px;">
+    <i class="fas fa-arrow-left"></i> Back to Sales
+  </a>
+  <a href="{{ url_for('distributor_sell_bp.sale_detail', sale_id=sale[0]) }}" class="btn btn-outline" style="height:36px; padding:0 14px; font-size:13px;">
+    <i class="fas fa-eye"></i> View Detail
+  </a>
+</div>
+
+<div class="change-notice">
+  <i class="fas fa-exclamation-triangle"></i>
+  <div>
+    <strong>Important:</strong> Changing the quantity will automatically adjust your stock levels.
+    If you increase quantity, the extra units will be deducted from stock.
+    If you decrease quantity, units will be returned to stock.
+  </div>
+</div>
+
+<form method="POST" id="updateForm">
+<div class="page-grid">
+
+  <!-- Left Form -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon"><i class="fas fa-edit"></i></div>
+      <div>
+        <div class="form-card-title">Edit Sale #{{ sale[0] }}</div>
+        <div class="form-card-sub">{{ sale[1] }} — Recorded {{ sale[7].strftime('%d %b %Y') if sale[7] else '' }}</div>
+      </div>
+    </div>
+    <div class="form-card-body">
+
+      <!-- Product (Read-only) -->
+      <div class="form-section">
+        <div class="section-label"><i class="fas fa-box"></i> Product (Cannot Change)</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Product</label>
+            <input class="form-control disabled" type="text" value="{{ sale[1] }}" readonly>
+          </div>
+          <div class="form-group">
+            <label>Variant / Category</label>
+            <input class="form-control disabled" type="text" value="{{ sale[11] or '' }}{% if sale[11] and sale[12] %} — {% endif %}{{ sale[12] or '' }}" readonly>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quantity & Price -->
+      <div class="form-section">
+        <div class="section-label"><i class="fas fa-calculator"></i> Quantity & Pricing</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantity_sold">
+              Quantity Sold <span class="required">*</span>
+              <span class="change-badge">Was: {{ sale[2] }}</span>
+            </label>
+            <input class="form-control" type="number" name="quantity_sold" id="quantity_sold"
+                   min="1" value="{{ sale[2] }}" required oninput="recalculate()">
+            <span class="field-hint" id="qtyHint">Original: {{ sale[2] }} units</span>
+          </div>
+          <div class="form-group">
+            <label for="unit_price">
+              Unit Price (LKR) <span class="required">*</span>
+              <span class="change-badge">Was: {{ "{:,.2f}".format(sale[3]) }}</span>
+            </label>
+            <input class="form-control" type="number" step="0.01" name="unit_price" id="unit_price"
+                   min="0" value="{{ sale[3] }}" required oninput="recalculate()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer -->
+      <div class="form-section">
+        <div class="section-label"><i class="fas fa-user"></i> Customer Information</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="customer_name">Customer Name</label>
+            <input class="form-control" type="text" name="customer_name" id="customer_name"
+                   value="{{ sale[5] or '' }}" placeholder="e.g. John Perera">
+          </div>
+          <div class="form-group">
+            <label for="customer_contact">Contact Number</label>
+            <input class="form-control" type="text" name="customer_contact" id="customer_contact"
+                   value="{{ sale[6] or '' }}" placeholder="e.g. 077 123 4567">
+          </div>
+        </div>
+      </div>
+
+      <!-- Status & Notes -->
+      <div class="form-section">
+        <div class="section-label"><i class="fas fa-info-circle"></i> Status & Notes</div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label>Sale Status <span class="required">*</span></label>
+          <div class="status-group">
+            <input type="radio" class="status-option" name="status" id="st_completed" value="completed" {% if sale[8]=='completed' %}checked{% endif %}>
+            <label class="status-label" for="st_completed"><i class="fas fa-check-circle"></i> Completed</label>
+            <input type="radio" class="status-option" name="status" id="st_pending"   value="pending"   {% if sale[8]=='pending'   %}checked{% endif %}>
+            <label class="status-label" for="st_pending">  <i class="fas fa-clock"></i> Pending</label>
+            <input type="radio" class="status-option" name="status" id="st_cancelled" value="cancelled" {% if sale[8]=='cancelled' %}checked{% endif %}>
+            <label class="status-label" for="st_cancelled"><i class="fas fa-times-circle"></i> Cancelled</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea class="form-control" name="notes" id="notes"
+                    placeholder="Any additional notes…">{{ sale[9] or '' }}</textarea>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Right Sidebar -->
+  <div>
+    <div class="summary-card">
+      <div class="summary-header">
+        <h3><i class="fas fa-exchange-alt"></i> Change Summary</h3>
+        <p>Live preview of your edits</p>
+      </div>
+      <div class="summary-body">
+
+        <!-- Original -->
+        <div class="original-card">
+          <div class="original-card-title">Original Values</div>
+          <div class="original-row">
+            <span class="original-key">Quantity</span>
+            <span class="original-val">{{ sale[2] }} units</span>
+          </div>
+          <div class="original-row">
+            <span class="original-key">Unit Price</span>
+            <span class="original-val">LKR {{ "{:,.2f}".format(sale[3]) }}</span>
+          </div>
+          <div class="original-row">
+            <span class="original-key">Total</span>
+            <span class="original-val">LKR {{ "{:,.2f}".format(sale[4]) }}</span>
+          </div>
+        </div>
+
+        <!-- New values -->
+        <div class="summary-row">
+          <span class="summary-label">New Quantity</span>
+          <span class="summary-value" id="sumQty">{{ sale[2] }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">New Unit Price</span>
+          <span class="summary-value" id="sumPrice">LKR {{ "{:,.2f}".format(sale[3]) }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Stock Adjustment</span>
+          <span class="summary-value" id="sumStockAdj">0 units (no change)</span>
+        </div>
+        <div class="total-box">
+          <div class="total-box-label">New Total Amount</div>
+          <div class="total-box-value" id="sumTotal">LKR {{ "{:,.2f}".format(sale[4]) }}</div>
+          <div class="total-box-old" id="sumOldTotal">Was: LKR {{ "{:,.2f}".format(sale[4]) }}</div>
+        </div>
+
+        <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Changes
+          </button>
+          <a href="{{ url_for('distributor_sell_bp.sale_detail', sale_id=sale[0]) }}"
+             class="btn btn-outline" style="justify-content:center;">
+            Discard Changes
+          </a>
+          <button type="button" class="btn btn-danger" style="justify-content:center;"
+                  onclick="document.getElementById('deleteModal').style.display='flex'">
+            <i class="fas fa-trash"></i> Delete Sale
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</form>
+
+<!-- Delete Modal -->
+<div id="deleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:2000; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:16px; padding:32px; max-width:420px; width:90%; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,.15);">
+    <i class="fas fa-exclamation-triangle" style="font-size:48px; color:#EF4444; margin-bottom:16px;"></i>
+    <h3 style="font-size:18px; font-weight:700; margin-bottom:8px;">Delete This Sale?</h3>
+    <p style="color:#6B7280; font-size:14px; margin-bottom:24px;">
+      This will permanently delete Sale #{{ sale[0] }} and restore <strong>{{ sale[2] }} units</strong> to your stock. Cannot be undone.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button class="btn btn-outline" onclick="document.getElementById('deleteModal').style.display='none'">Cancel</button>
+      <form method="POST" action="{{ url_for('distributor_sell_bp.delete_sale', sale_id=sale[0]) }}">
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const originalQty   = parseInt("{{ sale[2] }}");
+const originalPrice = parseFloat("{{ sale[3] }}");
+const originalTotal = parseFloat("{{ sale[4] }}");
+
+function recalculate() {
+  const qty   = parseInt(document.getElementById('quantity_sold').value) || 0;
+  const price = parseFloat(document.getElementById('unit_price').value) || 0;
+  const total = qty * price;
+  const qtyDiff = qty - originalQty;
+
+  document.getElementById('sumQty').textContent   = qty + ' units';
+  document.getElementById('sumPrice').textContent  = 'LKR ' + price.toFixed(2);
+  document.getElementById('sumTotal').textContent  = 'LKR ' + total.toLocaleString('en-LK', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  // Stock adjustment label
+  let adjText = '0 units (no change)';
+  let adjColor = '#6B7280';
+  if (qtyDiff > 0) {
+    adjText = `−${qtyDiff} units (deducted)`;
+    adjColor = '#EF4444';
+  } else if (qtyDiff < 0) {
+    adjText = `+${Math.abs(qtyDiff)} units (restored)`;
+    adjColor = '#10B981';
+  }
+  const adjEl = document.getElementById('sumStockAdj');
+  adjEl.textContent = adjText;
+  adjEl.style.color = adjColor;
+}
+
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+</script>
+{% endblock %}
